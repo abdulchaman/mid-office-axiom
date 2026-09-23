@@ -381,7 +381,7 @@ const QuickLinks = ({
                     : undefined,
             },
         
-        ...(roleType !== "GROUP_CMO_TASK" && roleType !== "CMO_TASK" && roleType !== "REF_CMO_TASK" && roleType !== 'PIVV_TASK' && roleType !== "GROUP_VENDOR_CMO_TASK" && roleType !== "MAS_TASK" ? [
+        ...(roleType !== "CVT_TASK" && roleType !== "GROUP_CMO_TASK" && roleType !== "CMO_TASK" && roleType !== "REF_CMO_TASK" && roleType !== 'PIVV_TASK' && roleType !== "GROUP_VENDOR_CMO_TASK" && roleType !== "MAS_TASK" ? [
             {
                 label: "Previous Policies",
                 path: safeApplicationNumber ? getPreviousPoliciesPath(safeBusinessType, safeApplicationNumber) : "",
