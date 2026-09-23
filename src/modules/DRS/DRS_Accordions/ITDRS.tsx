@@ -30,6 +30,8 @@ interface ITSectionData {
   referenceNumber?: string;
   raisedBy?: string;
   raisedDate?: string;
+  userRole: string;
+  errorStep: string;
   userRemarks?: string;
   errorCode?: string;
   errorDescription?: string;
@@ -254,6 +256,14 @@ const ITDRS = () => {
       value: showValue(itSection?.raisedDate),
     },
     {
+      label: "User Role",
+      value: showValue(itSection?.userRole),
+    },
+    {
+      label: "Error Step",
+      value: showValue(itSection?.errorStep),
+    },
+    {
       label: "Error Code",
       value: showValue(itSection?.errorCode),
     },
@@ -357,7 +367,7 @@ const ITDRS = () => {
           }}
         >
           <GridSection
-            columns={3}
+            columns={5}
             items={details}
           />
         </Box>

@@ -1399,7 +1399,9 @@
       "raisedDate": "2026-08-29T10:30:00",
       "userRemarks": "Application is unable to proceed due to an unexpected system error.",
       "errorCode": "IT-ERR-5001",
-      "errorDescription": "Unable to complete the requested operation. Please retry after some time."
+      "errorDescription": "Unable to complete the requested operation. Please retry after some time.",
+      "userRole": "CUW",
+      "errorStep": "Complete Task Service"
     },
     "requirementManagement": [
       {
