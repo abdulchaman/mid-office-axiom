@@ -1201,18 +1201,30 @@ export interface CustomerProfileSubmitResponse {
   updatedDetails?: Partial<CustomerProfileForm>;
 }
 
+// export type AuditTrailRow = {
+//   dateTime: string;
+//   fromPool: string;
+//   fromPoolUser: string;
+//   toPool: string;
+//   toPoolUser: string;
+//   subPool: string;
+//   userId: string;
+//   uwDecision: string;
+//   breDecision: string;
+//   remarks: string;
+//   userRemarks: string;
+// };
+
 export type AuditTrailRow = {
   dateTime: string;
-  fromPool: string;
-  fromPoolUser: string;
-  toPool: string;
-  toPoolUser: string;
-  subPool: string;
-  userId: string;
+  team: string;
+  centre: string;
+  caseStatus: string;
+  poolName: string;
   uwDecision: string;
-  breDecision: string;
   remarks: string;
-  userRemarks: string;
+  actionedByUserId: string;
+  caseAssignedToUserId: string;
 };
 
 export type AuditTrail = AuditTrailRow[];

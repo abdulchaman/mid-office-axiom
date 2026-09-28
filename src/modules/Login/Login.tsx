@@ -396,7 +396,7 @@ const Login = () => {
                 color="text.secondary"
                 sx={{
                   mt: 1,
-                  fontSize: "11px",
+                  fontSize: "10px",
                 }}
               >
                 It must be at least 8 characters
@@ -406,7 +406,7 @@ const Login = () => {
             </Box>
 
             {/* Remember Me */}
-            <Box
+            {/* <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
@@ -423,7 +423,7 @@ const Login = () => {
                   )
                 }
               />
-            </Box>
+            </Box> */}
 
             {/* Login Button */}
             <CustomButton

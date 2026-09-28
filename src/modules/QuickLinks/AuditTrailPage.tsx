@@ -44,18 +44,30 @@ interface StoredSearchResult {
   data?: Record<string, unknown>;
 }
 
+// const auditTrailColumns: Column<AuditTrailRow>[] = [
+//   { key: "dateTime", header: "Date/Time", width: "13%" },
+//   { key: "fromPool", header: "From Pool", width: "12%" },
+//   { key: "fromPoolUser", header: "From Pool User", width: "14%" },
+//   { key: "toPool", header: "To Pool", width: "10%" },
+//   { key: "toPoolUser", header: "To Pool User", width: "14%" },
+//   { key: "subPool", header: "Sub Pool", width: "10%" },
+//   { key: "userId", header: "User ID", width: "10%" },
+//   { key: "uwDecision", header: "UW Decision", width: "10%" },
+//   { key: "breDecision", header: "BRE Decision", width: "10%" },
+//   { key: "remarks", header: "BRE Remarks", width: "10%" },
+//   { key: "userRemarks", header: "User Remarks", width: "10%" },
+// ];
+
 const auditTrailColumns: Column<AuditTrailRow>[] = [
-  { key: "dateTime", header: "Date/Time", width: "13%" },
-  { key: "fromPool", header: "From Pool", width: "12%" },
-  { key: "fromPoolUser", header: "From Pool User", width: "14%" },
-  { key: "toPool", header: "To Pool", width: "10%" },
-  { key: "toPoolUser", header: "To Pool User", width: "14%" },
-  { key: "subPool", header: "Sub Pool", width: "10%" },
-  { key: "userId", header: "User ID", width: "10%" },
-  { key: "uwDecision", header: "UW Decision", width: "10%" },
-  { key: "breDecision", header: "BRE Decision", width: "10%" },
-  { key: "remarks", header: "BRE Remarks", width: "10%" },
-  { key: "userRemarks", header: "User Remarks", width: "10%" },
+  { key: "dateTime", header: "Date/Time", width: "12%" },
+  { key: "team", header: "Team", width: "10%" },
+  { key: "centre", header: "Centre", width: "10%" },
+  { key: "caseStatus", header: "Case Status", width: "12%" },
+  { key: "poolName", header: "Pool Name", width: "12%" },
+  { key: "uwDecision", header: "UW Decision", width: "12%" },
+  { key: "remarks", header: "Remarks", width: "14%" },
+  { key: "actionedByUserId", header: "Actioned By User ID", width: "14%" },
+  { key: "caseAssignedToUserId", header: "Case Assigned To User ID", width: "14%" },
 ];
 
 const decisionHistoryColumns: Column<DecisionHistoryRow>[] = [
@@ -271,6 +283,28 @@ const normalizeDecisionHistoryRows = (
   return toDecisionRows(quickLinks.auditTrail ?? source.auditTrail);
 };
 
+// const normalizeAuditTrailRows = (rows: unknown): AuditTrail => {
+//   if (!Array.isArray(rows)) return [];
+
+//   return rows.map((row) => {
+//     const item = toRecord(row);
+
+//     return {
+//       dateTime: formatDateTime(item.dateTime),
+//       fromPool: toDisplay(item.fromPool),
+//       fromPoolUser: toDisplay(item.fromPoolUser),
+//       toPool: toDisplay(item.toPool),
+//       toPoolUser: toDisplay(item.toPoolUser),
+//       subPool: toDisplay(item.subPool),
+//       userId: toDisplay(item.userId),
+//       uwDecision: toDisplay(item.uwDecision ?? item.decision),
+//       breDecision: toDisplay(item.breDecision),
+//       remarks: toDisplay(item.remarks),
+//       userRemarks: toDisplay(item.userRemarks),
+//     };
+//   });
+// };
+
 const normalizeAuditTrailRows = (rows: unknown): AuditTrail => {
   if (!Array.isArray(rows)) return [];
 
@@ -278,17 +312,84 @@ const normalizeAuditTrailRows = (rows: unknown): AuditTrail => {
     const item = toRecord(row);
 
     return {
-      dateTime: formatDateTime(item.dateTime),
-      fromPool: toDisplay(item.fromPool),
-      fromPoolUser: toDisplay(item.fromPoolUser),
-      toPool: toDisplay(item.toPool),
-      toPoolUser: toDisplay(item.toPoolUser),
-      subPool: toDisplay(item.subPool),
-      userId: toDisplay(item.userId),
-      uwDecision: toDisplay(item.uwDecision ?? item.decision),
-      breDecision: toDisplay(item.breDecision),
-      remarks: toDisplay(item.remarks),
-      userRemarks: toDisplay(item.userRemarks),
+      dateTime: formatDateTime(
+        pickValue(item, [
+          "dateTime",
+          "timestamp",
+          "createdAt",
+          "updatedAt",
+        ]),
+      ),
+
+      team: toDisplay(
+        pickValue(item, [
+          "team",
+          "teamName",
+        ]),
+      ),
+
+      centre: toDisplay(
+        pickValue(item, [
+          "centre",
+          "center",
+          "centreName",
+          "centerName",
+        ]),
+      ),
+
+      caseStatus: toDisplay(
+        pickValue(item, [
+          "caseStatus",
+          "status",
+          "applicationStatus",
+        ]),
+      ),
+
+      poolName: toDisplay(
+        pickValue(item, [
+          "poolName",
+          "pool",
+          "toPool",
+          "fromPool",
+        ]),
+      ),
+
+      uwDecision: toDisplay(
+        pickValue(item, [
+          "uwDecision",
+          "decision",
+          "caseUWDecision",
+        ]),
+      ),
+
+      remarks: toDisplay(
+        pickValue(item, [
+          "remarks",
+          "userRemarks",
+          "uwDecisionRemarks",
+          "comment",
+          "notes",
+        ]),
+      ),
+
+      actionedByUserId: toDisplay(
+        pickValue(item, [
+          "actionedByUserId",
+          "actionedBy",
+          "userId",
+          "updatedBy",
+          "fromPoolUser",
+        ]),
+      ),
+
+      caseAssignedToUserId: toDisplay(
+        pickValue(item, [
+          "caseAssignedToUserId",
+          "assignedToUserId",
+          "caseAssignedTo",
+          "toPoolUser",
+        ]),
+      ),
     };
   });
 };

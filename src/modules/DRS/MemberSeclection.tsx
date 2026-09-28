@@ -1,903 +1,1886 @@
-import { Box, IconButton, SvgIcon, Tooltip, Typography } from "@mui/material";
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+// import {
+//   useEffect,
+//   useMemo,
+//   useRef,
+//   useState,
+// } from "react";
+// import {
+//   useLocation,A
+//   useNavigate,
+// } from "react-router-dom";
+// import {
+//   useDispatch,
+//   useSelector,
+// } from "react-redux";
+// import {
+//   Alert,
+//   Box,
+//   CircularProgress,
+//   Snackbar,
+//   Typography,
+// } from "@mui/material";
 
-import { useSelector } from "react-redux";
-import type { RootState } from "../../store/store";
+// import {
+//   accordionRegistry,
+//   DRS_LAYOUTS,
+//   getPoolWiseAvailableAccordions,
+// } from "./drs-layouts";
 
-import CustomDialog from "../../components/ui/Dialog/Dialog";
-//import { KeyRightArrowIcon } from "../../icons/Icons";
-//import Decision from "./DRS_Accordions/decision";
+// import { drsThunk } from "../../store/thunks/drsThunk";
+// import { breThunk } from "../../store/thunks/breThunk";
+// import { completeTaskThunk } from "../../store/thunks/completeTaskThunk";
+// import type {
+//   AppDispatch,
+//   RootState,
+// } from "../../store/store";
+// import CustomButton from "../../components/ui/Button/Button";
+// import { getInboxPath } from "../../routes/routes";
+// import { preloginThunk } from "../../store/thunks/preloginThunk";
+// import ApplicantApplicationSummary from "./ApplicantSummary";
+// import type { ComponentType } from "react";
 
-type UnknownRecord = Record<string, unknown>;
+// interface ApplicationRow {
+//   applicationNo?: string;
+//   businessType?: string;
+//   roleType?: string;
+//   userId?: string;
+//   taskId?: string;
+//   instanceId?: string;
+//   decision?: string;
+//   remarks?: string;
+//   [key: string]: unknown;
+// }
 
-interface MemberSelectionProps {
-  applicationNumber?: string;
-  source?: unknown;
-  onMemberSelect: (memberIndex: number) => void;
-  stickyTop?: number | string;
-  uwDecision?: ReactNode;
+// interface SelectedCaseContext {
+//   applicationNo?: string;
+//   userId?: string;
+//   businessType?: string;
+//   roleType?: string;
+//   taskId?: string;
+//   instanceId?: string;
+//   taskCompositeId?: string;
+//   source?: string;
+//   readOnly?: boolean;
+// }
+
+// interface SnackbarState {
+//   open: boolean;
+//   message: string;
+//   severity: "success" | "error" | "warning" | "info";
+// }
+
+// const mapper = {
+//   CMO_TASK: "RETAIL_CMO_POOL",
+//   CUW_TASK: "RETAIL_CUW_POOL",
+//   CVT_TASK: "CVT_TASK",
+//   CPT_TASK: "RETAIL_CPT_POOL",
+//   HOD_TASK: "RETAIL_HOD_POOL",
+//   SR_UW_TASK: "RETAIL_SR_UW_POOL",
+//   READY_FOR_ISSUANCE_TASK: "RETAIL_READY_FOR_ISSUANCE_POOL",
+//   SYSTEM_WAIT_POOL_AMR_NON_MEDICAL:
+//     "RETAIL_SYSTEM_WAIT_POOL_NON_MEDICAL",
+//   AMR_NON_MEDICAL_TASK: "RETAIL_AMR_NON_MEDICAL",
+//   RECONSIDERATION_TASK: "RETAIL_RECONSIDERATION_POOL",
+//   PRE_ISSUANCE_SERVICING_TASK:
+//     "RETAIL_PRE_ISSUANCE_SERVICING_POOL",
+//   POST_ISSUANCE_TASK: "POST_ISSUANCE_TASK",
+//   EXCEPTIONAL_TASK: "RETAIL_EXCEPTIONAL_POOL",
+//   PIVV_TASK: "PIVV_TASK",
+//   DVT_TASK: "GROUP_DVT_POOL",
+//   GUW_TASK: "GROUP_GUW_POOL",
+//   MMT_TASK: "GROUP_MMT_POOL",
+//   SUW_TASK: "RETAIL_SUW_POOL",
+//   VENDOR_CMO_TASK: "RETAIL_VENDOR_CMO_POOL",
+//   COPS_TASK: "RETAIL_COPS_POOL",
+//   IT_TASK: "RETAIL_IT_POOL",
+//   SYSTEM_WAIT_POOL_AMR_MEDICAL:
+//     "RETAIL_SYSTEM_WAIT_POOL_AMR_MEDICAL",
+//   RI_TASK: "RETAIL_REINSURER_POOL",
+//   REQUIREMENT_POOL: "RETAIL_REQUIREMENT_REVIEW_POOL",
+//   CUW_CLAIM_AUDIT_TASK: "RETAIL_CUW_CLAIM_AUDIT",
+//   ACCUITY_TASK_: "RETAIL_ACCUITY_USER",
+//   ECG_TASK: "RETAIL_ECG_POOL",
+//   TMT_TASK: "RETAIL_TMT_POOL",
+//   GRIEVANCE_TASK: "RETAIL_GRIEVANCE_POOL",
+//   REJECT_TASK: "RETAIL_REJECT_POOL",
+//   GUW_FORMAL_TASK: "GUW_FORMAL_TASK",
+//   DVT_FORMAL_TASK: "DVT_FORMAL_TASK",
+//   RISK_TASK: "RISK_TASK",
+//   PRE_LOGIN_CUW_TASK: "PRE_LOGIN_CUW_TASK",
+//   AMR_MEDICAL_TASK: "AMR_MEDICAL_TASK",
+//   ACCUITY_TASK: "ACCUITY_TASK",
+//   ISSUANCE_TASK: "ISSUANCE_TASK",
+//   CPT_DATA_ENTRY_MR_TASK: "CPT_DATA_ENTRY_MR_TASK",
+//   CPT_DATA_ENTRY_NMR_TASK: "CPT_DATA_ENTRY_NMR_TASK",
+// } as const;
+
+// const SUMMARY_SECTION_ROLES = new Set([
+//   "CPT_DATA_ENTRY_NMR_TASK",
+//   "CPT_DATA_ENTRY_MR_TASK",
+//   "PIVV_TASK",
+// ]);
+
+// const APP_HEADER_HEIGHT = 57;
+
+// const getSelectedCaseContext = (): SelectedCaseContext => {
+//   try {
+//     const value = localStorage.getItem("selectedCaseContext");
+
+//     return value
+//       ? (JSON.parse(value) as SelectedCaseContext)
+//       : {};
+//   } catch {
+//     return {};
+//   }
+// };
+
+// const normalizeTaskId = (value: string): string => {
+//   const normalizedValue = value.trim();
+
+//   if (!normalizedValue) {
+//     return "";
+//   }
+
+//   const parts = normalizedValue.split(".");
+//   return parts.at(-1)?.trim() ?? normalizedValue;
+// };
+
+// const isBrowserRefresh = (): boolean => {
+//   const [navigationEntry] = performance.getEntriesByType(
+//     "navigation",
+//   ) as PerformanceNavigationTiming[];
+
+//   return navigationEntry?.type === "reload";
+// };
+
+// const normalizeAccordionId = (value: string): string =>
+//   value.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+
+// const isUwToolkitAccordion = (accordionId: string): boolean =>
+//   normalizeAccordionId(accordionId) === "uwtoolkit";
+
+// const normalizeValue = (value: unknown): string =>
+//   String(value ?? "").trim().toUpperCase();
+
+// const toRecord = (value: unknown): Record<string, unknown> =>
+//   value && typeof value === "object" && !Array.isArray(value)
+//     ? (value as Record<string, unknown>)
+//     : {};
+
+// const getNestedData = (value: unknown): Record<string, unknown> => {
+//   let current = toRecord(value);
+
+//   for (let depth = 0; depth < 4; depth += 1) {
+//     const nested = toRecord(current.data);
+
+//     if (Object.keys(nested).length === 0) {
+//       break;
+//     }
+
+//     current = nested;
+//   }
+
+//   return current;
+// };
+
+// const getRequirementRows = (value: unknown): Record<string, unknown>[] => {
+//   const payload = getNestedData(value);
+//   const requirements = payload.requirementManagement;
+
+//   return Array.isArray(requirements)
+//     ? requirements.map(toRecord)
+//     : [];
+// };
+
+// const getMiscItems = (value: unknown): Record<string, unknown>[] => {
+//   const payload = getNestedData(value);
+//   const misc = payload.misc;
+
+//   return Array.isArray(misc) ? misc.map(toRecord) : [];
+// };
+
+// const getActiveCptDecisionCode = (
+//   miscItems: Record<string, unknown>[],
+//   codes: string[],
+// ): string => {
+//   const normalizedCodes = new Set(codes.map(normalizeValue));
+//   const item = miscItems.find(
+//     (masterItem) =>
+//       normalizeValue(masterItem.type) === "CPT" &&
+//       normalizeValue(masterItem.isActive) === "Y" &&
+//       normalizedCodes.has(normalizeValue(masterItem.code)),
+//   );
+
+//   return String(item?.code ?? "").trim();
+// };
+
+// const DRS = () => {
+//   const location = useLocation();
+//   const navigate = useNavigate();
+//   const dispatch = useDispatch<AppDispatch>();
+
+//   const application = location.state?.application as
+//     | ApplicationRow
+//     | undefined;
+
+//   const drsData = useSelector(
+//     (state: RootState) => state.drs.data,
+//   );
+
+//   const masterData = useSelector(
+//     (state: RootState) => state.masterData,
+//   );
+
+//   const [isPageLoading, setIsPageLoading] = useState(true);
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+
+//   const [snackbar, setSnackbar] = useState<SnackbarState>({
+//     open: false,
+//     message: "",
+//     severity: "info",
+//   });
+
+//   const lastRequestKeyRef = useRef<string | null>(null);
+//   const isBrowserRefreshRef = useRef(isBrowserRefresh());
+
+//   const selectedCaseContext = useMemo(
+//     () => getSelectedCaseContext(),
+//     [],
+//   );
+
+//   const storedRoleType =
+//     localStorage.getItem("roleType")?.trim() ?? "";
+
+//   const roleType =
+//     application?.roleType?.trim() ||
+//     selectedCaseContext.roleType?.trim() ||
+//     storedRoleType;
+
+//   const layout = mapper[roleType as keyof typeof mapper];
+
+//   useEffect(() => {
+//     if (!application) {
+//       return;
+//     }
+
+//     const valuesToPersist = {
+//       applicationNo: application.applicationNo,
+//       userId: application.userId,
+//       businessType: application.businessType,
+//       roleType: application.roleType,
+//     };
+
+//     Object.entries(valuesToPersist).forEach(([key, value]) => {
+//       const normalizedValue = value?.trim();
+
+//       if (normalizedValue) {
+//         localStorage.setItem(key, normalizedValue);
+//       }
+//     });
+//   }, [application]);
+
+//   const layoutAccordions = useMemo(
+//     () => (layout ? DRS_LAYOUTS[layout] ?? [] : []),
+//     [layout],
+//   );
+
+//   const sections = useMemo(
+//     () =>
+//       Array.from(
+//         new Set([
+//           ...layoutAccordions.map(String),
+//           "requirementCategoryInfo",
+//           "latestBreDecision",
+//           ...(SUMMARY_SECTION_ROLES.has(roleType.toUpperCase())
+//             ? ["summary"]
+//             : []),
+//         ]),
+//       ),
+//     [layoutAccordions, roleType],
+//   );
+
+//   const applicationNo = String(
+//     application?.applicationNo ??
+//     selectedCaseContext.applicationNo ??
+//     localStorage.getItem("applicationNo") ??
+//     "",
+//   ).trim();
+
+//   const userId = String(
+//     application?.userId ??
+//     selectedCaseContext.userId ??
+//     localStorage.getItem("userId") ??
+//     localStorage.getItem("username") ??
+//     "",
+//   ).trim();
+
+//   const businessType = String(
+//     application?.businessType ??
+//     selectedCaseContext.businessType ??
+//     localStorage.getItem("businessType") ??
+//     "retail",
+//   )
+//     .trim()
+//     .toLowerCase();
+
+//   const eventName =
+//     businessType === "group"
+//       ? "BRE-GROUP"
+//       : "BRE-RETAIL";
+//       console.log('eventName',businessType,eventName)
+
+//   useEffect(() => {
+//     if (
+//       !applicationNo ||
+//       !userId ||
+//       !roleType
+//     ) {
+//       void Promise.resolve().then(() => {
+//         setIsPageLoading(false);
+//       });
+
+//       return;
+//     }
+
+//     const requestKey = [
+//       applicationNo,
+//       userId,
+//       roleType,
+//       businessType,
+//       sections.join(","),
+//     ].join("|");
+
+//     if (lastRequestKeyRef.current === requestKey) {
+//       return;
+//     }
+
+//     lastRequestKeyRef.current = requestKey;
+
+//     const loadPageData = async () => {
+//       setIsPageLoading(true);
+
+//       try {
+//         const requests: Promise<unknown>[] = [
+//           dispatch(
+//             drsThunk({
+//               applicationNo,
+//               userId,
+//               roleType,
+//               sections,
+//               businessType,
+//             }),
+//           ).unwrap(),
+//         ];
+
+//         // BRE is required only when entering the DRS page. On a browser
+//         // refresh, reuse the existing BRE data and fetch only the DRS data.
+//         if (!isBrowserRefreshRef.current) {
+//           requests.push(
+//             dispatch(
+//               breThunk({
+//                 eventName,
+//                 applicationNumber: applicationNo,
+//                 businessType,
+//               }),
+//             ).unwrap(),
+//           );
+//         }
+
+//         if (roleType === "PRE_LOGIN_CUW_TASK") {
+//           requests.push(
+//             dispatch(
+//               preloginThunk({
+//                 applicationNumber: applicationNo,
+//               }),
+//             ).unwrap(),
+//           );
+//         }
+
+//         await Promise.all(requests);
+//       } catch (error) {
+//         console.error("Failed to load application details:", error);
+//       } finally {
+//         if (
+//           lastRequestKeyRef.current === requestKey
+//         ) {
+//           setIsPageLoading(false);
+//         }
+//       }
+//     };
+
+//     void Promise.resolve().then(loadPageData);
+//   }, [
+//     dispatch,
+//     applicationNo,
+//     userId,
+//     roleType,
+//     businessType,
+//     sections,
+//     eventName,
+//   ]);
+
+//   const visibleAccordions = useMemo(
+//     () =>
+//       getPoolWiseAvailableAccordions(
+//         layout,
+//         drsData,
+//       ),
+//     [layout, drsData],
+//   );
+
+//   const movedAccordionIds = useMemo(
+//     () =>
+//       visibleAccordions.filter((accordionId) => {
+//         const normalizedId = normalizeAccordionId(String(accordionId));
+//         return (
+//           normalizedId === "requirementmanagement" ||
+//           normalizedId === "decisionhistory"
+//         );
+//       }),
+//     [visibleAccordions],
+//   );
+
+//   const pageAccordionIds = useMemo(
+//     () =>
+//       visibleAccordions.filter(
+//         (accordionId) => !movedAccordionIds.includes(accordionId),
+//       ),
+//     [movedAccordionIds, visibleAccordions],
+//   );
+
+//   const getRegisteredAccordion = (normalizedName: string) => {
+//     const registryEntry = Object.entries(accordionRegistry).find(
+//       ([accordionId]) =>
+//         normalizeAccordionId(String(accordionId)) === normalizedName,
+//     );
+
+//     return registryEntry
+//       ? (registryEntry[1] as ComponentType<{ embedded?: boolean }>)
+//       : null;
+//   };
+
+//   const RequirementManagementPanel = getRegisteredAccordion(
+//     "requirementmanagement",
+//   );
+//   const DecisionHistoryPanel = getRegisteredAccordion("decisionhistory");
+
+//   const handleSubmit = async () => {
+//     if (isSubmitting) {
+//       return;
+//     }
+
+//     const rawTaskId = String(
+//       application?.taskId ??
+//       selectedCaseContext.taskId ??
+//       selectedCaseContext.taskCompositeId ??
+//       localStorage.getItem("taskId") ??
+//       localStorage.getItem("taskCompositeId") ??
+//       "",
+//     ).trim();
+
+//     const taskId = normalizeTaskId(rawTaskId);
+
+//     const instanceId = String(
+//       application?.instanceId ??
+//       selectedCaseContext.instanceId ??
+//       localStorage.getItem("instanceId") ??
+//       "",
+//     ).trim();
+
+//     if (!applicationNo || !userId) {
+//       setSnackbar({
+//         open: true,
+//         message: "Application number or user ID is missing.",
+//         severity: "error",
+//       });
+//       return;
+//     }
+
+//     if (!taskId || !instanceId) {
+//       setSnackbar({
+//         open: true,
+//         message: "Task ID or instance ID is missing.",
+//         severity: "error",
+//       });
+//       return;
+//     }
+
+//     let decision = "AMR";
+
+//     if (roleType === "CPT_DATA_ENTRY_NMR_TASK") {
+//       const requirementRows = getRequirementRows(drsData);
+//       const statuses = requirementRows.map((row) =>
+//         normalizeValue(row.status),
+//       );
+//       const hasPendingRequirement = statuses.includes("PENDING");
+//       const areAllRequirementsAccepted =
+//         statuses.length > 0 &&
+//         statuses.every((status) =>
+//           ["ACCEPT", "ACCEPTED"].includes(status),
+//         );
+//       const miscItems = getMiscItems(masterData);
+
+//       if (hasPendingRequirement) {
+//         decision = getActiveCptDecisionCode(miscItems, ["AMR"]);
+//       } else if (areAllRequirementsAccepted) {
+//         decision = getActiveCptDecisionCode(miscItems, [
+//           "CLS_TASK",
+//           "CLOSE_TASK",
+//         ]);
+//       } else {
+//         setSnackbar({
+//           open: true,
+//           message:
+//             requirementRows.length === 0
+//               ? "No requirements are available to submit."
+//               : "Every requirement must be either Pending or Accepted before submitting.",
+//           severity: "error",
+//         });
+//         return;
+//       }
+
+//       if (!decision) {
+//         setSnackbar({
+//           open: true,
+//           message: hasPendingRequirement
+//             ? "Active AMR decision is not configured for CPT in the misc master."
+//             : "Active close-task decision is not configured for CPT in the misc master.",
+//           severity: "error",
+//         });
+//         return;
+//       }
+//     }
+
+//     /*
+//      * These values are now guaranteed to be strings
+//      * because the missing-value checks have completed.
+//      */
+//     const payload = {
+//       businessType,
+//       requestContext: {
+//         taskId,
+//         userId,
+//         appNo: applicationNo,
+//         instanceId,
+//         remarks: "",
+//         decision,
+//       },
+//     };
+
+//     setIsSubmitting(true);
+
+//     try {
+//       // Complete-task is called only after BRE succeeds.
+//       await dispatch(
+//         breThunk({
+//           eventName,
+//           applicationNumber: applicationNo,
+//           businessType,
+//         }),
+//       ).unwrap();
+
+//       await dispatch(
+//         completeTaskThunk(payload),
+//       ).unwrap();
+
+//       setSnackbar({
+//         open: true,
+//         message: "Application submitted successfully.",
+//         severity: "success",
+//       });
+
+//       window.setTimeout(() => {
+//         navigate(getInboxPath());
+//       }, 800);
+//     } catch (error) {
+//       console.error(
+//         "Failed to submit application:",
+//         error,
+//       );
+
+//       setSnackbar({
+//         open: true,
+//         message:
+//           typeof error === "string"
+//             ? error
+//             : "Unable to submit the application. Please try again.",
+//         severity: "error",
+//       });
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+//   const renderSubmitButton = () => (
+//     <Box
+//       sx={{
+//         display: "flex",
+//         justifyContent: "center",
+//         alignItems: "center",
+//         mt: 0.75,
+//         mb: 0.75,
+//       }}
+//     >
+//       <CustomButton
+//         onClick={handleSubmit}
+//         disabled={isSubmitting}
+//         sx={{
+//           minWidth: 170,
+//           borderRadius: "28px",
+//           bgcolor: "#ad252a",
+//           py: 0.65,
+//           textTransform: "none",
+//           fontSize: "13px",
+//           fontWeight: 600,
+//           boxShadow: "none",
+//           "&:hover": {
+//             bgcolor: "#941f24",
+//             boxShadow: "none",
+//           }
+//         }}
+//       >
+//         <Box
+//           component="span"
+//           sx={{
+//             display: "inline-flex",
+//             alignItems: "center",
+//             justifyContent: "center",
+//             gap: 1,
+//             minWidth: 110,
+//           }}
+//         >
+//           {isSubmitting && (
+//             <CircularProgress
+//               size={17}
+//               thickness={5}
+//               sx={{ color: "inherit" }}
+//             />
+//           )}
+
+//           {isSubmitting ? "Submitting..." : "Submit"}
+//         </Box>
+//       </CustomButton>
+//     </Box>
+//   );
+
+//   if (isPageLoading) {
+//     return (
+//       <Box
+//         sx={{
+//           width: "100%",
+//           height: `calc(100dvh - ${APP_HEADER_HEIGHT}px)`,
+//           display: "flex",
+//           flexDirection: "column",
+//           alignItems: "center",
+//           justifyContent: "center",
+//           gap: 1.5,
+//           backgroundColor: "#f5f7fa",
+//           overflow: "hidden",
+//         }}
+//       >
+//         <CircularProgress
+//           size={42}
+//           thickness={4}
+//           sx={{ color: "#f58220" }}
+//         />
+
+//         <Typography
+//           variant="body2"
+//           sx={{
+//             color: "text.secondary",
+//             fontWeight: 500,
+//           }}
+//         >
+//           Loading application details...
+//         </Typography>
+//       </Box>
+//     );
+//   }
+
+//   const hasUwToolkit = pageAccordionIds.some(
+//     (accordionId) =>
+//       isUwToolkitAccordion(String(accordionId)),
+//   );
+//   const shouldShowSubmitButton =
+//     roleType === "CPT_DATA_ENTRY_NMR_TASK" ||
+//     roleType === "CPT_DATA_ENTRY_MR_TASK";
+
+//   return (
+//     <>
+//       <Box
+//         component="main"
+//         sx={{
+//           width: "100%",
+//           height: `calc(100dvh - ${APP_HEADER_HEIGHT}px)`,
+//           minHeight: 0,
+//           overflowY: "auto",
+//           overflowX: "hidden",
+//           overscrollBehavior: "contain",
+//           scrollbarGutter: "stable",
+//         }}
+//       >
+//         <Box
+//           sx={{
+//             display: "flex",
+//             flexDirection: "column",
+//             gap: 1,
+//             pb: 1,
+//           }}
+//         >
+//           <ApplicantApplicationSummary
+//             stickyTop={0}
+//             onBackToInbox={() => navigate(getInboxPath())}
+//             requirementManagement={
+//               RequirementManagementPanel ? (
+//                 <RequirementManagementPanel embedded />
+//               ) : null
+//             }
+//             decisionHistory={
+//               DecisionHistoryPanel ? (
+//                 <DecisionHistoryPanel embedded />
+//               ) : null
+//             }
+//           />
+
+//           {pageAccordionIds.map((accordionId) => {
+//             const AccordionComponent =
+//               accordionRegistry[accordionId];
+
+//             if (!AccordionComponent) {
+//               return null;
+//             }
+
+//             const showSubmitBeforeAccordion =
+//               isUwToolkitAccordion(
+//                 String(accordionId),
+//               );
+
+//             return (
+//               <Box key={accordionId}>
+//                 {shouldShowSubmitButton && showSubmitBeforeAccordion &&
+//                   renderSubmitButton()}
+
+//                 <AccordionComponent />
+//               </Box>
+//             );
+//           })}
+
+//           {shouldShowSubmitButton && !hasUwToolkit &&
+//             renderSubmitButton()}
+//         </Box>
+//       </Box>
+//       <Snackbar
+//         open={snackbar.open}
+//         autoHideDuration={4000}
+//         anchorOrigin={{
+//           vertical: "top",
+//           horizontal: "right",
+//         }}
+//         onClose={() =>
+//           setSnackbar((current) => ({
+//             ...current,
+//             open: false,
+//           }))
+//         }
+//       >
+//         <Alert
+//           severity={snackbar.severity}
+//           variant="filled"
+//           onClose={() =>
+//             setSnackbar((current) => ({
+//               ...current,
+//               open: false,
+//             }))
+//           }
+//         >
+//           {snackbar.message}
+//         </Alert>
+//       </Snackbar>
+//     </>
+//   );
+// };
+
+// export default DRS;
+
+
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+import {
+  useDispatch,
+  useSelector,
+} from "react-redux";
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Snackbar,
+  Typography,
+} from "@mui/material";
+
+import {
+  accordionRegistry,
+  DRS_LAYOUTS,
+  getPoolWiseAvailableAccordions,
+} from "./drs-layouts";
+
+import { drsThunk } from "../../store/thunks/drsThunk";
+import { breThunk } from "../../store/thunks/breThunk";
+import { completeTaskThunk } from "../../store/thunks/completeTaskThunk";
+import type {
+  AppDispatch,
+  RootState,
+} from "../../store/store";
+import CustomButton from "../../components/ui/Button/Button";
+import { getInboxPath } from "../../routes/routes";
+import { preloginThunk } from "../../store/thunks/preloginThunk";
+import ApplicantApplicationSummary from "./ApplicantSummary";
+import type { ComponentType } from "react";
+import MemberSelection from "./MemberSeclection";
+import UWDecision from "./DRS_Accordions/UWDecision";
+import Grievance from "./Grievance";
+import RaiseGrievance from "./RaiseGrievance";
+import VendorCMOApplicationSummary from "./VendorCMOApplicationSummary";
+import RefCMOApplicationSummary from "./RefCMOApplicationSummary";
+import HOCMOApplicationSummary from "./HOCMOApplicationSummary";
+import PIVVDrs from "./PIVVDrs";
+import ClaimAudit from "./ClaimAudit";
+import SrUWDrs from "./SrUWDrs";
+import HodDrs from "./HodDrs";
+import MAS from "./MAS";
+import GroupVendorCMOApplicationSummary from "./Group/GroupVendorCMOApplicationSummary";
+import GroupHOCMOApplicationSummary from "./Group/GroupHOCMOApplicationSummary";
+import GroupRefCMOApplicationSummary from "./Group/GroupRefCMOApplicationSummary";
+import GroupGrievance from "./Group/GroupGrievance";
+import CVTApplicantSummary from "./CVTApplicantSummary";
+import DVTApplicantSummary from "./DVTApplicantSummary";
+
+import GroupClaimAuditTask from "./Group/GroupClaimAuditTask";
+
+import GroupCUWDRS from "./Group/GroupCuwDrs";
+import GroupSrUwDrs from "./Group/GroupSrUwDrs";
+import GroupHoD from "./Group/GroupHoD";
+import GroupFormalGuwDrs from "./Group/Formal/GroupFormalGuwDrs";
+import GroupFormalSrUwDrs from "./Group/Formal/GroupFormalSrUwDrs";
+import GroupFormalHoD from "./Group/Formal/GroupFormalHoD";
+import GroupFormalClaimAuditTask from "./Group/Formal/GroupFormalClaimAuditTask";
+
+
+interface ApplicationRow {
+  applicationNo?: string;
+  businessType?: string;
+  roleType?: string;
+  userId?: string;
+  taskId?: string;
+  instanceId?: string;
+  decision?: string;
+  remarks?: string;
+  [key: string]: unknown;
 }
 
-interface DisplayMember {
-  index: number;
-  key: string;
-  type: string;
-  name: string;
-  demographics: string[];
-  decision: string;
-  details: Array<[string, string]>;
+interface SelectedCaseContext {
+  applicationNo?: string;
+  userId?: string;
+  businessType?: string;
+  roleType?: string;
+  taskId?: string;
+  instanceId?: string;
+  taskCompositeId?: string;
+  source?: string;
+  readOnly?: boolean;
 }
 
-interface RiderSummary {
-  key: string;
-  name: string;
-  sumAssured: string;
-  policyTerm: string;
-  premiumTerm: string;
-  premium: string;
+interface SnackbarState {
+  open: boolean;
+  message: string;
+  severity: "success" | "error" | "warning" | "info";
 }
 
-const toRecord = (value: unknown): UnknownRecord =>
-  value && typeof value === "object" && !Array.isArray(value)
-    ? (value as UnknownRecord)
-    : {};
+const mapper = {
+  CMO_TASK: "RETAIL_CMO_POOL",
+  REF_CMO_TASK: "REF_CMO_TASK",
+  CUW_TASK: "RETAIL_CUW_POOL",
+  CVT_TASK: "CVT_TASK",
+  CPT_TASK: "RETAIL_CPT_POOL",
+  HOD_TASK: "RETAIL_HOD_POOL",
+  SR_UW_TASK: "RETAIL_SR_UW_POOL",
+  READY_FOR_ISSUANCE_TASK: "RETAIL_READY_FOR_ISSUANCE_POOL",
+  SYSTEM_WAIT_POOL_AMR_NON_MEDICAL:
+    "RETAIL_SYSTEM_WAIT_POOL_NON_MEDICAL",
+  AMR_NON_MEDICAL_TASK: "RETAIL_AMR_NON_MEDICAL",
+  RECONSIDERATION_TASK: "RETAIL_RECONSIDERATION_POOL",
+  PRE_ISSUANCE_SERVICING_TASK:
+    "RETAIL_PRE_ISSUANCE_SERVICING_POOL",
+  POST_ISSUANCE_TASK: "POST_ISSUANCE_TASK",
+  EXCEPTIONAL_TASK: "RETAIL_EXCEPTIONAL_POOL",
+  PIVV_TASK: "PIVV_TASK",
+  DVT_TASK: "GROUP_DVT_POOL",
+  GUW_TASK: "GROUP_GUW_POOL",
+  MMT_TASK: "GROUP_MMT_POOL",
+  SUW_TASK: "RETAIL_SUW_POOL",
+  VENDOR_CMO_TASK: "RETAIL_VENDOR_CMO_POOL",
+  COPS_TASK: "RETAIL_COPS_POOL",
+  IT_TASK: "RETAIL_IT_POOL",
+  SYSTEM_WAIT_POOL_AMR_MEDICAL:
+    "RETAIL_SYSTEM_WAIT_POOL_AMR_MEDICAL",
+  RI_TASK: "RETAIL_REINSURER_POOL",
+  REQUIREMENT_POOL: "RETAIL_REQUIREMENT_REVIEW_POOL",
+  CUW_CLAIM_AUDIT_TASK: "RETAIL_CUW_CLAIM_AUDIT",
+  ACCUITY_TASK_: "RETAIL_ACCUITY_USER",
+  ECG_TASK: "RETAIL_ECG_POOL",
+  TMT_TASK: "RETAIL_TMT_POOL",
+  GRIEVANCE_TASK: "RETAIL_GRIEVANCE_POOL",
+  REJECT_TASK: "RETAIL_REJECT_POOL",
+  GUW_FORMAL_TASK: "GUW_FORMAL_TASK",
+  DVT_FORMAL_TASK: "DVT_FORMAL_TASK",
+  RISK_TASK: "RISK_TASK",
+  PRE_LOGIN_CUW_TASK: "PRE_LOGIN_CUW_TASK",
+  AMR_MEDICAL_TASK: "AMR_MEDICAL_TASK",
+  ACCUITY_TASK: "ACCUITY_TASK",
+  ISSUANCE_TASK: "ISSUANCE_TASK",
+  CPT_DATA_ENTRY_MR_TASK: "CPT_DATA_ENTRY_MR_TASK",
+  CPT_DATA_ENTRY_NMR_TASK: "CPT_DATA_ENTRY_NMR_TASK",
+  GROUP_VENDOR_CMO_TASK: "GROUP_VENDOR_CMO_TASK",
+  GROUP_CMO_TASK: "GROUP_CMO_TASK",
+  GROUP_REF_CMO_TASK: "GROUP_REF_CMO_TASK",
+  MAS_TASK: "MAS_TASK",
+  GROUP_CUW_CLAIM_AUDIT_TASK:"GROUP_CUW_CLAIM_AUDIT_TASK",
+  GROUP_CUW_TASK: "GROUP_CUW_TASK",
+  GROUP_SR_UW_TASK: "GROUP_SR_UW_TASK",
+  GROUP_HOD_TASK: "GROUP_HOD_TASK",
+  FORMAL_GUW_TASK: "FORMAL_GUW_TASK",
+FORMAL_SR_UW_TASK: "FORMAL_SR_UW_TASK",
+FORMAL_HOD_TASK: "FORMAL_HOD_TASK",
+FORMAL_CUW_CLAIM_AUDIT_TASK: "FORMAL_CUW_CLAIM_AUDIT_TASK",
+} as const;
 
-const hasValue = (value: unknown): boolean =>
-  value !== undefined &&
-  value !== null &&
-  String(value).trim() !== "";
+const SUMMARY_SECTION_ROLES = new Set([
+  "CPT_DATA_ENTRY_NMR_TASK",
+  "CPT_DATA_ENTRY_MR_TASK",
+  "PIVV_TASK",
+]);
 
-const firstValue = (...values: unknown[]): unknown =>
-  values.find(hasValue);
+const APP_HEADER_HEIGHT = 57;
 
-const displayText = (...values: unknown[]): string => {
-  const value = firstValue(...values);
-  return hasValue(value) ? String(value).trim() : "-";
+const getSelectedCaseContext = (): SelectedCaseContext => {
+  try {
+    const value = localStorage.getItem("selectedCaseContext");
+
+    return value
+      ? (JSON.parse(value) as SelectedCaseContext)
+      : {};
+  } catch {
+    return {};
+  }
 };
 
-const currency = (...values: unknown[]): string => {
-  const value = firstValue(...values);
+const normalizeTaskId = (value: string): string => {
+  const normalizedValue = value.trim();
 
-  if (!hasValue(value)) {
-    return "-";
+  if (!normalizedValue) {
+    return "";
   }
 
-  const rawValue = String(value).trim();
-  const numericValue = Number(rawValue.replace(/,/g, ""));
-
-  if (!Number.isFinite(numericValue)) {
-    return rawValue.startsWith("₹") ? rawValue : `₹${rawValue}`;
-  }
-
-  return `₹${new Intl.NumberFormat("en-IN", {
-    maximumFractionDigits: 0,
-  }).format(numericValue)}`;
+  const parts = normalizedValue.split(".");
+  return parts.at(-1)?.trim() ?? normalizedValue;
 };
 
-const formatMemberType = (value: unknown, index: number): string => {
-  const memberType = String(value ?? "").trim();
+const isBrowserRefresh = (): boolean => {
+  const [navigationEntry] = performance.getEntriesByType(
+    "navigation",
+  ) as PerformanceNavigationTiming[];
 
-  if (!memberType) {
-    return `Member ${index + 1}`;
-  }
-
-  const lifeAssuredMatch = memberType.match(/^life\s*assured\s*(\d+)$/i) ??
-    memberType.match(/^lifeassured(\d+)$/i);
-
-  if (lifeAssuredMatch) {
-    return `Life Assured ${lifeAssuredMatch[1]}`;
-  }
-
-  if (/^proposer$/i.test(memberType)) {
-    return "Proposer";
-  }
-
-  return memberType
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/[_-]+/g, " ")
-    .replace(/\b\w/g, (character) => character.toUpperCase());
+  return navigationEntry?.type === "reload";
 };
 
-const getFullName = (member: UnknownRecord): string => {
-  const personal = {
-    ...toRecord(member.applicantDetails),
-    ...toRecord(member.personalDetails),
-    ...toRecord(member.personalSummary),
-    ...toRecord(member.proposerSummary),
-  };
+const normalizeAccordionId = (value: string): string =>
+  value.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
 
-  const directName = firstValue(
-    member.fullName,
-    member.applicantName,
-    member.name,
-    personal.fullName,
-    personal.applicantName,
+type EmbeddedAccordionComponent = ComponentType<{
+  embedded?: boolean;
+}>;
+
+const getRegisteredAccordion = (
+  normalizedName: string,
+): EmbeddedAccordionComponent | null => {
+  const registryEntry = Object.entries(accordionRegistry).find(
+    ([accordionId]) =>
+      normalizeAccordionId(String(accordionId)) === normalizedName,
   );
 
-  if (hasValue(directName)) {
-    return String(directName).trim();
-  }
-
-  const name = [
-    personal.firstName,
-    personal.middleName,
-    personal.lastName,
-  ]
-    .filter(hasValue)
-    .map(String)
-    .join(" ")
-    .trim();
-
-  return name || "-";
+  return registryEntry
+    ? (registryEntry[1] as EmbeddedAccordionComponent)
+    : null;
 };
 
-const getAddressCity = (member: UnknownRecord): string => {
-  const addresses = Array.isArray(member.address)
-    ? member.address.map(toRecord)
-    : [];
-  const communicationAddress = addresses.find(
-    (address) => String(address.type ?? "").toLowerCase() === "communication",
-  );
-  const permanentAddress = addresses.find(
-    (address) => String(address.type ?? "").toLowerCase() === "permanent",
-  );
-
-  return displayText(
-    communicationAddress?.city,
-    toRecord(member.communicationAddressDetails).city,
-    permanentAddress?.city,
-    toRecord(member.permanentAddressDetails).city,
-  );
-};
-
-// Temporary UI demo data. Set to false to display the API UW decisions again.
-const USE_DUMMY_UW_DECISIONS = true;
-const DUMMY_UW_DECISIONS: Record<string, UnknownRecord> = {
-  lifeassured1: {
-    caseUWDecision: "Refer to HOD",
-    decision: "Refer to HOD",
-    remarks: "Referred to HOD for review and counter sign of the underwriting decision.",
-    outlier: "Medical history requires senior underwriting review",
-    fullName: "Amit Shah (Demo HOD)",
-    ntid: "demo.hod",
-    decisionType: "counterSign",
-    hodReason: "Approval required beyond the underwriter's authority limit",
-    firstUwDecision: "Standard",
-    firstUwDecisionCode: "STD",
-    firstUwSmokerStatus: "Non Smoker",
-  },
-  lifeassured2: {
-    caseUWDecision: "Decline",
-    decision: "Decline",
-    remarks: "Declined based on adverse medical findings.",
-    outlier: "Elevated HbA1c",
-    decisionCode: "XXR",
-    declineReason: "High than normal level of sugar as per Hemoglobin A1c test",
-  },
-  proposer: {
-    caseUWDecision: "Standard",
-    decision: "Standard",
-    remarks: "Accepted at standard rates after underwriting review.",
-    outlier: "None",
-    decisionCode: "STD",
-    smokerStatus: "Non Smoker",
-  },
-};
-
-const withDummyUwDecision = (member: UnknownRecord): UnknownRecord => {
-  const memberType = String(member.memberType ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const dummy = DUMMY_UW_DECISIONS[memberType];
-  if (!USE_DUMMY_UW_DECISIONS || !dummy) return member;
-  // Keep demo decisions self-contained so old API fields cannot leak into the modal.
-  return { memberType: member.memberType, uwDecision: dummy };
-};
-
-// Resolve only this member's saved UW data; BRE is not a UW selection.
-const getUwData = (member: UnknownRecord): UnknownRecord => ({
-  ...toRecord(member.underwriting),
-  ...member,
-  ...toRecord(member.uwDecision),
-});
-
-const masterEntries = (value: unknown): UnknownRecord[] => {
-  if (Array.isArray(value)) return value.flatMap(masterEntries);
-  const record = toRecord(value);
-  return [record, ...Object.values(record)
-    .filter((item) => item !== null && typeof item === "object")
-    .flatMap(masterEntries)];
-};
-
-const decisionText = (value: unknown, masters: UnknownRecord[], reason = false): string => {
-  if (Array.isArray(value)) return value.map((item) => decisionText(item, masters, reason)).filter((item) => item !== "-").join(", ") || "-";
-  if (value !== null && typeof value === "object") {
-    const item = toRecord(value);
-    return decisionText(firstValue(item.description, item.label, item.fullName, item.value, item.code, item.iibCode), masters, reason);
-  }
-  if (!hasValue(value)) return "-";
-  const raw = String(value).trim();
-  const match = masters.find((item) =>
-    (reason ? [item.iibCode] : [item.code, item.key, item.value])
-      .some((key) => hasValue(key) && String(key).trim() === raw));
-  return displayText(match?.description, match?.label, raw);
-};
-
-const getMemberDecision = (member: UnknownRecord, masters: UnknownRecord[]): string => {
-  const uw = getUwData(member);
-  return decisionText(firstValue(uw.caseUWDecision, uw.decision,
-    typeof member.uwDecision === "string" ? member.uwDecision : undefined,
-    uw.status), masters);
-};
-
-const getDecisionDetails = (member: UnknownRecord, masters: UnknownRecord[]): Array<[string, string]> => {
-  const uw = getUwData(member);
-  const decision = getMemberDecision(member, masters);
-  const normalize = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const kind = normalize(decision);
-  const rows: Array<[string, string]> = [["Case UW Decision", decision]];
-  const add = (label: string, value: unknown, reason = false) => rows.push([label, decisionText(value, masters, reason)]);
-  const optional = (label: string, value: unknown, reason = false) => { if (hasValue(value)) add(label, value, reason); };
-  if (!["RAISEREQUIREMENT", "RAISEREQ"].includes(kind)) add("Outlier", uw.outlier);
-  const terminal = (type: string, first = false) => {
-    const prefix = first ? "1st UW " : "";
-    if (["STANDARD", "STD", "ACCEPT", "ACCEPTED", "BORDERLINESTANDARD", "BORSTD", "DECLINE", "REJECT", "POSTPONE", "COUNTEROFFER"].includes(type)) {
-      rows.push([`${prefix}Decision Code`, displayText(first ? uw.firstUwDecisionCode : uw.decisionCode)]);
-    }
-    if (["STANDARD", "STD", "ACCEPT", "ACCEPTED"].includes(type)) {
-      add(`${prefix}Smoker Status`, first ? uw.firstUwSmokerStatus : firstValue(uw.smokerStatus, toRecord(member.healthDetail).smokerStatus, toRecord(member.healthDetail).smoker_status));
-    }
-    const reasons: Record<string, [string, unknown]> = {
-      DECLINE: ["Decline Reason", firstValue(uw.declineReasons, uw.declineReason)],
-      REJECT: ["Reject Reason", firstValue(uw.rejectReason, uw.rejectReasons)],
-      BORDERLINESTANDARD: ["Borderline Standard Reason", uw.borderlineStandardReasons],
-      BORSTD: ["Borderline Standard Reason", uw.borderlineStandardReasons],
-      COUNTEROFFER: ["Counter Offer Reason", uw.counterOfferReasons],
-      POSTPONE: ["Postpone Reason", uw.postponeReason],
-    };
-    if (reasons[type]) add(`${prefix}${reasons[type][0]}`, firstValue(reasons[type][1], first ? uw.firstUwReason : firstValue(uw.reason, uw.decisionReason)), true);
-    if (type === "POSTPONE") add("Postponement Period", uw.postponementPeriod);
-  };
-  terminal(kind);
-  if (kind.startsWith("REFER")) {
-    const labels: Record<string, string> = {
-      REFERTOHOD: "Name of HoD", REFERTOSRUW: "Name of Sr.UW",
-      REFERTOHOCMO: "Name of HO CMO", REFERTOCMO: "Name of CMO",
-      REFERTORISK: "Risk Referral Reasons", REFERTOREINSURER: "Reinsurer Referral reasons",
-    };
-    add(labels[kind] || "Approver", firstValue(uw.fullName, uw.referralValue, uw.ntid));
-    optional("Decision Type", uw.decisionType === "opinion" ? "Opinion" : uw.decisionType === "counterSign" ? "Counter Sign" : uw.decisionType);
-    optional("HOD Reasons", uw.hodReason);
-    optional("Sr UW Reasons", uw.srUwReason);
-    optional("Referral Reason", uw.referralReason);
-    optional("Parallel UW Decision", uw.parallelDecision);
-    optional("Parallel Approver", firstValue(uw.parallelFullName, uw.parallelNtid));
-    optional("Parallel Referral Reason", uw.parallelReferralReason);
-    if (hasValue(uw.firstUwDecision)) {
-      const firstDecision = decisionText(uw.firstUwDecision, masters);
-      add("1st UW Decision", firstDecision);
-      terminal(normalize(firstDecision), true);
-    }
-  }
-  if (kind === "HOLD") add("Hold Reasons", firstValue(uw.holdReasons, uw.reason));
-  optional("Waiver Justification", uw.waiverJustificationReason);
-  optional("Waiver Justification Remarks", uw.waiverJustificationRemarks);
-  return rows;
-};
-
-const getDecisionTone = (decision: string) => {
-  const normalizedDecision = decision.toUpperCase();
-
-  if (/(NON[- ]?STP|DECLIN|REJECT|DC)/.test(normalizedDecision)) {
-    return { background: "#FDEBEC", border: "#F2C4C7", text: "#B3262E" };
-  }
-
-  if (/(STP|STANDARD|APPROV|ACCEPT)/.test(normalizedDecision)) {
-    return { background: "#EEF8F1", border: "#B8DCC0", text: "#28743C" };
-  }
-
-  if (/(REFER|REVIEW|PENDING|TUW|RM)/.test(normalizedDecision)) {
-    return { background: "#FFF3E0", border: "#F1C97C", text: "#9A6200" };
-  }
-
-  return { background: "#F4F3F2", border: "#DED9D6", text: "#665D58" };
-};
-
-const MEMBER_TONES = [
-  { background: "#FFF0E8", border: "#F2C9B5", text: "#B54A00" },
-  { background: "#F4F0FF", border: "#D9CCF2", text: "#6C4AA0" },
-  { background: "#EAF5FB", border: "#BEDBEA", text: "#2F668F" },
-];
-
-const CompactField = ({ label, value }: { label: string; value: string }) => (
-  <Box
-    sx={{
-      minWidth: 0,
-      p: 0.7,
-      border: "1px solid #E4DEDB",
-      borderRadius: 1,
-      bgcolor: "#FFFFFF",
-    }}
-  >
-    <Typography sx={{ color: "#827671", fontSize: 9 }}>
-      {label}
-    </Typography>
-    <Typography
-      sx={{
-        mt: 0.25,
-        color: "#332D2A",
-        fontSize: 11,
-        fontWeight: 800,
-        overflowWrap: "anywhere",
-      }}
-    >
-      {value}
-    </Typography>
-  </Box>
+const RequirementManagementPanel = getRegisteredAccordion(
+  "requirementmanagement",
 );
 
-const loanSummaryItems = [
-    { label: "MPH Name", value: "ICICI" },
-    { label: "PAD", value: "9 Sept 2026" },
-    { label: "Date of loan disbursement", value: "9 Sept 2026" },
-    { label: "Coverage option", value: "Life" },
-    { label: "Loan type", value: "Personal Loan" },
-    { label: "Bank type", value: "Private" },
-    { label: "Loan term", value: "60" },
-    { label: "Loan Account No.", value: "12345678" },
-    { label: "Share of loan", value: "50%" },
-    { label: "Applicant status", value: "Active" },
-    { label: "Loan amount", value: "₹50,00,000" },
-    { label: "Master policy holder code", value: "MPH123" },
-    { label: "Type of loan", value: "Unsecured" },
-];
+const DecisionHistoryPanel = getRegisteredAccordion(
+  "decisionhistory",
+);
 
-const MemberSelection = ({
-  applicationNumber,
-  source,
-  onMemberSelect,
-  stickyTop = 0,
-}: MemberSelectionProps) => {
-  const [selectedDecisionIndex, setSelectedDecisionIndex] = useState<number | null>(null);
-  const masters = masterEntries(useSelector((state: RootState) => state.drs.masters));
-  const [riderDialogOpen, setRiderDialogOpen] = useState(false);
-  const data = toRecord(source);
-  const applicationOverview = toRecord(data.applicationOverview);
-  const products = Array.isArray(applicationOverview.productDetail)
-    ? applicationOverview.productDetail.map(toRecord)
+const isUwToolkitAccordion = (accordionId: string): boolean =>
+  normalizeAccordionId(accordionId) === "uwtoolkit";
+
+const normalizeValue = (value: unknown): string =>
+  String(value ?? "").trim().toUpperCase();
+
+const toRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+
+const getNestedData = (value: unknown): Record<string, unknown> => {
+  let current = toRecord(value);
+
+  for (let depth = 0; depth < 4; depth += 1) {
+    const nested = toRecord(current.data);
+
+    if (Object.keys(nested).length === 0) {
+      break;
+    }
+
+    current = nested;
+  }
+
+  return current;
+};
+
+const getRequirementRows = (value: unknown): Record<string, unknown>[] => {
+  const payload = getNestedData(value);
+  const requirements = payload.requirementManagement;
+
+  return Array.isArray(requirements)
+    ? requirements.map(toRecord)
     : [];
-  const baseProduct =
-    products.find(
-      (product) => String(product.type ?? "").toLowerCase() === "base",
-    ) ?? products[0] ?? applicationOverview;
-  const riderRecords = Array.isArray(applicationOverview.riderDetails)
-    ? applicationOverview.riderDetails.map(toRecord)
-    : products.filter(
-        (product) => String(product.type ?? "").toLowerCase() === "rider",
-      );
+};
 
-  const riders: RiderSummary[] = riderRecords
-    .map((rider, index) => ({
-      key: displayText(rider.id, rider.productCode, `${index}`),
-      name: displayText(rider.name, rider.riderName, rider.productName),
-      sumAssured: currency(rider.sumAssured, rider.tsa, rider.appliedSA),
-      policyTerm: displayText(rider.policyTerm, rider.term),
-      premiumTerm: displayText(
-        rider.premiumPaymentTerm,
-        rider.ppt,
-        rider.premiumTerm,
-      ),
-      premium: currency(rider.premium, rider.annualPremium),
-    }))
-    .filter((rider) => rider.name !== "-");
+const getMiscItems = (value: unknown): Record<string, unknown>[] => {
+  const payload = getNestedData(value);
+  const misc = payload.misc;
 
-  const members: DisplayMember[] = (Array.isArray(data.summary)
-    ? data.summary.map(toRecord)
-    : []
-  ).map((member, index) => {
-    const personal = {
-      ...toRecord(member.applicantDetails),
-      ...toRecord(member.personalDetails),
-      ...toRecord(member.personalSummary),
-      ...toRecord(member.proposerSummary),
-    };
-    const finance = {
-      ...toRecord(member.financialDetails),
-      ...toRecord(member.applicantFinancialDetails),
-    };
-    const decisionMember = withDummyUwDecision(member);
-    const age = toRecord(personal.age).years;
-    const demographics = [
-      hasValue(age) ? `${age} yrs` : null,
-      firstValue(personal.gender),
-      firstValue(personal.highestQualification, personal.education),
-      firstValue(finance.occupation, personal.occupationType),
-      hasValue(finance.annualIncome)
-        ? `${currency(finance.annualIncome)} p.a.`
-        : null,
-      getAddressCity(member) === "-" ? null : getAddressCity(member),
-    ]
-      .filter(hasValue)
-      .map(String);
+  return Array.isArray(misc) ? misc.map(toRecord) : [];
+};
 
-    return {
-      index,
-      key: displayText(member.partyId, member.clientId, `${index}`),
-      type: formatMemberType(member.memberType, index),
-      name: getFullName(member),
-      demographics,
-      decision: getMemberDecision(decisionMember, masters),
-      details: getDecisionDetails(decisionMember, masters),
-    };
+const getActiveCptDecisionCode = (
+  miscItems: Record<string, unknown>[],
+  codes: string[],
+): string => {
+  const normalizedCodes = new Set(codes.map(normalizeValue));
+  const item = miscItems.find(
+    (masterItem) =>
+      normalizeValue(masterItem.type) === "CPT" &&
+      normalizeValue(masterItem.isActive) === "Y" &&
+      normalizedCodes.has(normalizeValue(masterItem.code)),
+  );
+
+  return String(item?.code ?? "").trim();
+};
+
+const DRS = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+
+  const application = location.state?.application as
+    | ApplicationRow
+    | undefined;
+
+  const drsData = useSelector(
+    (state: RootState) => state.drs.data,
+  );
+
+  const masterData = useSelector(
+    (state: RootState) => state.masterData,
+  );
+
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [memberSelection, setMemberSelection] = useState<{
+    applicationNo: string;
+    memberIndex: number | null;
+  }>({
+    applicationNo: "",
+    memberIndex: null,
   });
 
-  const selectedDecision = members.find((member) => member.index === selectedDecisionIndex) ?? null;
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
+    open: false,
+    message: "",
+    severity: "info",
+  });
 
-  const resolvedApplicationNumber = displayText(
-    applicationNumber,
-    data.applicationNumber,
-    data.applicationNo,
-    applicationOverview.applicationNumber,
-    applicationOverview.applicationNo,
-  );
-  const productName = displayText(
-    baseProduct.productName,
-    baseProduct.name,
-    applicationOverview.productName,
-    applicationOverview.product,
-  );
-  const sumAssured = currency(
-    baseProduct.sumAssured,
-    baseProduct.appliedSA,
-    applicationOverview.sumAssured,
-    applicationOverview.appliedSa,
-  );
-  const channel = displayText(applicationOverview.channel, data.channel, "Agency");
+  const lastRequestKeyRef = useRef<string | null>(null);
+  const isBrowserRefreshRef = useRef(isBrowserRefresh());
 
-  const parameters = [
-    "TSA - ₹10,00,000",
-    "TRSA - ₹5,00,000",
-    "TPSA - ₹10,00,000",
-    "TFSA - ₹10,00,000",
-    "TSSA - ₹10,00,000",
-    "ADBR TSA - ₹5,00,000",
-    "ATPD TSA - ₹5,00,000",
-    "CI Rider TSA - ₹3,00,000",
-    "CI Rider TRSA - ₹3,00,000",
-    "WOP TSA - ₹10,00,000",
-    "BTBB TSA - ₹5,00,000",
-    "Total Premium - ₹10,000"
-  ]
-    .filter((value) => value !== "-")
-    .join(" / ");
+  const selectedCaseContext = useMemo(
+    () => getSelectedCaseContext(),
+    [],
+  );
 
-  const handleRowKeyDown = (
-    event: KeyboardEvent<HTMLElement>,
-    memberIndex: number,
-  ) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      onMemberSelect(memberIndex);
+  const storedRoleType =
+    localStorage.getItem("roleType")?.trim() ?? "";
+
+  const roleType =
+    application?.roleType?.trim() ||
+    selectedCaseContext.roleType?.trim() ||
+    storedRoleType;
+
+  const layout = mapper[roleType as keyof typeof mapper];
+
+  useEffect(() => {
+    if (!application) {
+      return;
+    }
+
+    const valuesToPersist = {
+      applicationNo: application.applicationNo,
+      userId: application.userId,
+      businessType: application.businessType,
+      roleType: application.roleType,
+    };
+
+    Object.entries(valuesToPersist).forEach(([key, value]) => {
+      const normalizedValue = value?.trim();
+
+      if (normalizedValue) {
+        localStorage.setItem(key, normalizedValue);
+      }
+    });
+  }, [application]);
+
+  const layoutAccordions = useMemo(
+    () => (layout ? DRS_LAYOUTS[layout] ?? [] : []),
+    [layout],
+  );
+
+  const sections = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          ...layoutAccordions.map(String),
+          "requirementCategoryInfo",
+          "latestBreDecision",
+          ...(SUMMARY_SECTION_ROLES.has(roleType.toUpperCase())
+            ? ["summary"]
+            : []),
+        ]),
+      ),
+    [layoutAccordions, roleType],
+  );
+
+  const applicationNo = String(
+    application?.applicationNo ??
+    selectedCaseContext.applicationNo ??
+    localStorage.getItem("applicationNo") ??
+    "",
+  ).trim();
+
+  const userId = String(
+    application?.userId ??
+    selectedCaseContext.userId ??
+    localStorage.getItem("userId") ??
+    localStorage.getItem("username") ??
+    "",
+  ).trim();
+
+  const businessType = String(
+    application?.businessType ??
+    selectedCaseContext.businessType ??
+    localStorage.getItem("businessType") ??
+    "retail",
+  )
+    .trim()
+    .toLowerCase();
+
+  const eventName =
+    businessType === "group"
+      ? "BRE-GROUP"
+      : "BRE-RETAIL";
+
+  const selectedMemberIndex =
+    memberSelection.applicationNo === applicationNo
+      ? memberSelection.memberIndex
+      : null;
+
+  useEffect(() => {
+    if (
+      !applicationNo ||
+      !userId ||
+      !roleType
+    ) {
+      void Promise.resolve().then(() => {
+        setIsPageLoading(false);
+      });
+
+      return;
+    }
+
+    const requestKey = [
+      applicationNo,
+      userId,
+      roleType,
+      businessType,
+      sections.join(","),
+    ].join("|");
+
+    if (lastRequestKeyRef.current === requestKey) {
+      return;
+    }
+
+    lastRequestKeyRef.current = requestKey;
+
+    const loadPageData = async () => {
+      setIsPageLoading(true);
+
+      try {
+        const requests: Promise<unknown>[] = [
+          dispatch(
+            drsThunk({
+              applicationNo,
+              userId,
+              roleType,
+              sections,
+              businessType,
+            }),
+          ).unwrap(),
+        ];
+
+        // BRE is required only when entering the DRS page. On a browser
+        // refresh, reuse the existing BRE data and fetch only the DRS data.
+        if (!isBrowserRefreshRef.current) {
+          requests.push(
+            dispatch(
+              breThunk({
+                eventName,
+                applicationNumber: applicationNo,
+                businessType,
+              }),
+            ).unwrap(),
+          );
+        }
+
+        if (roleType === "PRE_LOGIN_CUW_TASK") {
+          requests.push(
+            dispatch(
+              preloginThunk({
+                applicationNumber: applicationNo,
+              }),
+            ).unwrap(),
+          );
+        }
+
+        await Promise.all(requests);
+      } catch (error) {
+        console.error("Failed to load application details:", error);
+      } finally {
+        if (
+          lastRequestKeyRef.current === requestKey
+        ) {
+          setIsPageLoading(false);
+        }
+      }
+    };
+
+    void Promise.resolve().then(loadPageData);
+  }, [
+    dispatch,
+    applicationNo,
+    userId,
+    roleType,
+    businessType,
+    sections,
+    eventName,
+  ]);
+
+  const visibleAccordions = useMemo(
+    () =>
+      getPoolWiseAvailableAccordions(
+        layout,
+        drsData,
+      ),
+    [layout, drsData],
+  );
+
+  const movedAccordionIds = useMemo(
+    () =>
+      visibleAccordions.filter((accordionId) => {
+        const normalizedId = normalizeAccordionId(String(accordionId));
+        return (
+          normalizedId === "requirementmanagement" ||
+          normalizedId === "decisionhistory"
+        );
+      }),
+    [visibleAccordions],
+  );
+
+  const pageAccordionIds = useMemo(
+    () =>
+      visibleAccordions.filter(
+        (accordionId) =>
+          !movedAccordionIds.includes(accordionId) &&
+          !(normalizeValue(roleType) === "CVT_TASK" &&
+            ["summary", "applicantprofile", "applicantdetails"].includes(
+              normalizeAccordionId(String(accordionId)),
+            )),
+      ),
+    [movedAccordionIds, visibleAccordions, roleType],
+  );
+
+  const handleSubmit = async () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    const rawTaskId = String(
+      application?.taskId ??
+      selectedCaseContext.taskId ??
+      selectedCaseContext.taskCompositeId ??
+      localStorage.getItem("taskId") ??
+      localStorage.getItem("taskCompositeId") ??
+      "",
+    ).trim();
+
+    const taskId = normalizeTaskId(rawTaskId);
+
+    const instanceId = String(
+      application?.instanceId ??
+      selectedCaseContext.instanceId ??
+      localStorage.getItem("instanceId") ??
+      "",
+    ).trim();
+
+    if (!applicationNo || !userId) {
+      setSnackbar({
+        open: true,
+        message: "Application number or user ID is missing.",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (!taskId || !instanceId) {
+      setSnackbar({
+        open: true,
+        message: "Task ID or instance ID is missing.",
+        severity: "error",
+      });
+      return;
+    }
+
+    let decision = "AMR";
+
+    if (roleType === "CPT_DATA_ENTRY_NMR_TASK") {
+      const requirementRows = getRequirementRows(drsData);
+      const statuses = requirementRows.map((row) =>
+        normalizeValue(row.status),
+      );
+      const hasPendingRequirement = statuses.includes("PENDING");
+      const areAllRequirementsAccepted =
+        statuses.length > 0 &&
+        statuses.every((status) =>
+          ["ACCEPT", "ACCEPTED"].includes(status),
+        );
+      const miscItems = getMiscItems(masterData);
+
+      if (hasPendingRequirement) {
+        decision = getActiveCptDecisionCode(miscItems, ["AMR"]);
+      } else if (areAllRequirementsAccepted) {
+        decision = getActiveCptDecisionCode(miscItems, [
+          "CLS_TASK",
+          "CLOSE_TASK",
+        ]);
+      } else {
+        setSnackbar({
+          open: true,
+          message:
+            requirementRows.length === 0
+              ? "No requirements are available to submit."
+              : "Every requirement must be either Pending or Accepted before submitting.",
+          severity: "error",
+        });
+        return;
+      }
+
+      if (!decision) {
+        setSnackbar({
+          open: true,
+          message: hasPendingRequirement
+            ? "Active AMR decision is not configured for CPT in the misc master."
+            : "Active close-task decision is not configured for CPT in the misc master.",
+          severity: "error",
+        });
+        return;
+      }
+    }
+
+    /*
+     * These values are now guaranteed to be strings
+     * because the missing-value checks have completed.
+     */
+    const payload = {
+      businessType,
+      requestContext: {
+        taskId,
+        userId,
+        appNo: applicationNo,
+        instanceId,
+        remarks: "",
+        decision,
+      },
+    };
+
+    setIsSubmitting(true);
+
+    try {
+      // Complete-task is called only after BRE succeeds.
+      await dispatch(
+        breThunk({
+          eventName,
+          applicationNumber: applicationNo,
+          businessType,
+        }),
+      ).unwrap();
+
+      await dispatch(
+        completeTaskThunk(payload),
+      ).unwrap();
+
+      setSnackbar({
+        open: true,
+        message: "Application submitted successfully.",
+        severity: "success",
+      });
+
+      window.setTimeout(() => {
+        navigate(getInboxPath());
+      }, 800);
+    } catch (error) {
+      console.error(
+        "Failed to submit application:",
+        error,
+      );
+
+      setSnackbar({
+        open: true,
+        message:
+          typeof error === "string"
+            ? error
+            : "Unable to submit the application. Please try again.",
+        severity: "error",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  return (
+  const renderSubmitButton = () => (
     <Box
       sx={{
-        width: "100%",
-        minWidth: 0,
-        position: "relative",
-        isolation: "isolate",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        mt: 0.75,
+        mb: 0.75,
       }}
     >
-      {/* Sticky relative to the page scroll area, not the browser viewport. */}
+      <CustomButton
+        onClick={handleSubmit}
+        disabled={isSubmitting}
+        sx={{
+          minWidth: 170,
+          borderRadius: "28px",
+          bgcolor: "#ad252a",
+          py: 0.65,
+          textTransform: "none",
+          fontSize: "13px",
+          fontWeight: 600,
+          boxShadow: "none",
+          "&:hover": {
+            bgcolor: "#941f24",
+            boxShadow: "none",
+          }
+        }}
+      >
+        <Box
+          component="span"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+            minWidth: 110,
+          }}
+        >
+          {isSubmitting && (
+            <CircularProgress
+              size={17}
+              thickness={5}
+              sx={{ color: "inherit" }}
+            />
+          )}
+
+          {isSubmitting ? "Submitting..." : "Submit"}
+        </Box>
+      </CustomButton>
+    </Box>
+  );
+
+  if (isPageLoading) {
+    return (
       <Box
         sx={{
           width: "100%",
-          minWidth: 0,
-          px: 0.5,
-          py: 0.75,
-          position: { xs: "static", md: "sticky" },
-          top: { md: stickyTop },
-          zIndex: { xs: "auto", md: 10 },
-          alignSelf: "flex-start",
-          bgcolor: "#FFFFFF",
-        }}
-      >
-        <Box
-          sx={{
-            width: "100%",
-            boxSizing: "border-box",
-            bgcolor: "#FFEAD7",
-            color: "#000000",
-            borderLeft: "1px solid #E45F14",
-            borderRadius: "0 0 12px 0",
-            // Reserve the 48px applicant photo slot plus its 12px gap.
-            pl: { xs: "calc(12px + 60px)", sm: "calc(17.6px + 60px)" },
-            pr: { xs: 1.5, sm: 2.2 },
-            py: 0.5,
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "nowrap",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 1.5,
-              minWidth: 0,
-              pt: 0.5,
-            }}
-          >
-            <Typography
-              sx={{
-                flex: "1 1 0",
-                minWidth: 0,
-                fontSize: { xs: 10, sm: 11.5 },
-                lineHeight: 1.65,
-                fontWeight: 700,
-                overflowWrap: "anywhere",
-              }}
-            >
-              <Box component="span" sx={{ fontWeight: 800 }}>Product:</Box>{" "}
-              {productName} / <Box component="span" sx={{ fontWeight: 800 }}>Channel:</Box>{" "}
-              {channel} / SA - {sumAssured}
-            </Typography>
-            <Typography
-              sx={{
-                flexShrink: 0,
-                px: 1.5,
-                py: 0.5,
-                border: "1px solid #EAD8D1",
-                borderRadius: "999px",
-                bgcolor: "#FFFFFF",
-                color: "#B71C2C",
-                fontSize: { xs: 12, sm: 14 },
-                fontWeight: 800,
-                lineHeight: 1.4,
-                whiteSpace: "nowrap",
-              }}
-            >
-              App No. - {resolvedApplicationNumber}
-            </Typography>
-          </Box>
-          <Typography
-            sx={{
-              mt: 0.45,
-              fontSize: { xs: 10, sm: 11.5 },
-              lineHeight: 1.65,
-              fontWeight: 500,
-              overflowWrap: "anywhere",
-            }}
-          >
-            <Box component="span" sx={{ fontWeight: 800 }}>Riders:</Box>{" "}
-            {riders.length > 0
-              ? riders.map((rider) => `${rider.name} - SA ${rider.sumAssured}`).join(" / ")
-              : "No riders"}
-          </Typography>
-            <Box
-                    sx={{
-                      mt: 0.45,
-                      display: "flex",
-                      alignItems: "center",
-                      columnGap: 0.75,
-                      rowGap: 0.2,
-                      flexWrap: "wrap",
-                      color: "#000000",
-                      fontSize: { xs: 10, sm: 11 },
-                      lineHeight: 1.65,
-                    }}
-                  >
-                    {...loanSummaryItems.map((item, index) => (
-                      <Box
-                        component="span"
-                        key={item.label}
-                        sx={{ display: "inline-flex", gap: 0.35 }}
-                      >
-                        {index > 0 && <Box component="span">/</Box>}
-                        <Box component="span" sx={{ fontWeight: 800 }}>
-                          {item.label}:
-                        </Box>
-                        <Box component="span" sx={{ fontWeight: 600 }}>
-                          {item.value}
-                        </Box>
-                      </Box>
-                    ))}
-                  </Box>
-          <Typography
-            sx={{
-              mt: 0.45,
-              fontSize: { xs: 10, sm: 11.5 },
-              lineHeight: 1.65,
-              fontWeight: 500,
-              overflowWrap: "anywhere",
-            }}
-          >
-            <Box component="span" sx={{ fontWeight: 800, mr: 1 }}>
-              Eligibility Parameters:
-            </Box>
-            {parameters}
-          </Typography>
-        </Box>
-      </Box>
-
-      <Box
-        sx={{
-          mx: 0.5,
-          mt: 0,
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            lg: "1fr",
-          },
-          gap: 1,
-          alignItems: "start",
-        }}
-      >
-      <Box
-        sx={{
+          height: `calc(100dvh - ${APP_HEADER_HEIGHT}px)`,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 1.5,
+          backgroundColor: "#f5f7fa",
           overflow: "hidden",
-          border: "1px solid #E4DEDA",
-          borderRadius: "12px",
-          bgcolor: "#FFFFFF",
-          boxShadow: "0 4px 16px rgba(54, 45, 40, 0.06)",
         }}
       >
-        <Box sx={{ px: { xs: 1.25, md: 1.75 }, py: 1.1, borderBottom: "1px solid #EAE4E1" }}>
-          <Typography sx={{ color: "#292421", fontSize: 13, fontWeight: 900 }}>
-            Select Member
-          </Typography>
-          <Typography sx={{ mt: 0.15, color: "#817773", fontSize: 9.5 }}>
-            {members.length} members are available in this application
-          </Typography>
-        </Box>
+        <CircularProgress
+          size={42}
+          thickness={4}
+          sx={{ color: "#f58220" }}
+        />
 
-        <Box
+        <Typography
+          variant="body2"
           sx={{
-            display: { xs: "none", md: "grid" },
-            gridTemplateColumns: "150px 220px minmax(0,1fr) 150px 34px",
-            gap: 1,
-            px: 1.75,
-            py: 0.75,
-            bgcolor: "#F7F5F4",
-            color: "#8A817C",
+            color: "text.secondary",
+            fontWeight: 500,
           }}
         >
-          {["Life", "Name", "Details", "UW Decision", ""].map((heading) => (
-            <Typography
-              key={heading || "action"}
-              sx={{ fontSize: 8, fontWeight: 900, textTransform: "uppercase", letterSpacing: 0.4 }}
-            >
-              {heading}
-            </Typography>
-          ))}
-        </Box>
-
-        {members.map((member, rowIndex) => {
-          const memberTone = MEMBER_TONES[rowIndex % MEMBER_TONES.length];
-          const decisionTone = getDecisionTone(member.decision);
-
-          return (
-            <Box
-              key={member.key}
-              sx={{
-                display: "grid",
-                gridTemplateColumns: {
-                  xs: "minmax(0,1fr) 34px",
-                  md: "minmax(0,1fr) 150px 34px",
-                },
-                gap: { xs: 0.75, md: 1 },
-                alignItems: "center",
-                px: { xs: 1.25, md: 1.75 },
-                py: 1,
-                borderBottom:
-                  rowIndex < members.length - 1 ? "1px solid #EEE9E6" : 0,
-                cursor: "default",
-                transition: "background-color .15s ease, transform .15s ease",
-                outline: "none",
-                "&:hover": { bgcolor: "#FFF9F5" },
-                "&:focus-visible": {
-                  bgcolor: "#FFF4EC",
-                  boxShadow: "inset 3px 0 0 #E45F14",
-                },
-              }}
-            >
-              <Box
-              role="button"
-              tabIndex={0}
-              aria-label={`Open ${member.type} ${member.name}`}
-              onClick={() => onMemberSelect(member.index)}
-              onKeyDown={(event) => handleRowKeyDown(event, member.index)}
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", md: "150px 220px minmax(0,1fr)" },
-                  gridColumn: { xs: "1 / -1", md: "auto" },
-                  gap: 1,
-                  alignItems: "center",
-                  minWidth: 0,
-                  alignSelf: "stretch",
-                  cursor: "pointer",
-                  borderRadius: 1,
-                  "&:focus-visible": { outline: "2px solid #E45F14", outlineOffset: 2 },
-                }}
-              >
-              <Box
-                sx={{
-                  width: "fit-content",
-                  minWidth: { xs: 112, md: 120 },
-                  px: 1,
-                  py: 0.45,
-                  border: `1px solid ${memberTone.border}`,
-                  borderRadius: "16px",
-                  bgcolor: memberTone.background,
-                  color: memberTone.text,
-                  textAlign: "center",
-                }}
-              >
-                <Typography sx={{ fontSize: 9, fontWeight: 900 }}>
-                  {member.type}
-                </Typography>
-              </Box>
-
-              <Box sx={{ minWidth: 0 }}>
-                <Typography
-                  title={member.name}
-                  sx={{
-                    color: "#292421",
-                    fontSize: 11,
-                    fontWeight: 900,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {member.name}
-                </Typography>
-                <Typography sx={{ display: { md: "none" }, mt: 0.25, color: "#756D69", fontSize: 9 }}>
-                  {member.demographics.join(" / ") || "Details unavailable"}
-                </Typography>
-              </Box>
-
-              <Typography
-                sx={{
-                  display: { xs: "none", md: "block" },
-                  minWidth: 0,
-                  color: "#5C514C",
-                  fontSize: 9.5,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {member.demographics.join(" / ") || "Details unavailable"}
-              </Typography>
-
-              </Box>
-
-              <Box
-                sx={{
-                  width: "fit-content",
-                  maxWidth: "100%",
-                  px: 1,
-                  py: 0.45,
-                  border: `1px solid ${decisionTone.border}`,
-                  borderRadius: "16px",
-                  bgcolor: decisionTone.background,
-                  color: decisionTone.text,
-                }}
-              >
-                <Typography
-                  title={member.decision}
-                  sx={{
-                    fontSize: 9,
-                    fontWeight: 900,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {member.decision}
-                </Typography>
-              </Box>
-
-              <Tooltip title="View UW decision details">
-                <IconButton
-                  size="small"
-                  aria-label={`View UW decision details for ${member.type} ${member.name}`}
-                  aria-haspopup="dialog"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setSelectedDecisionIndex(member.index);
-                  }}
-                  sx={{ color: "#A92129", "&:hover": { bgcolor: "#FFEAD7" } }}
-                >
-                  <SvgIcon fontSize="small">
-                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5C21.27 7.61 17 4.5 12 4.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />
-                  </SvgIcon>
-                </IconButton>
-              </Tooltip>
-            </Box>
-          );
-        })}
+          Loading application details...
+        </Typography>
       </Box>
+    );
+  }
 
-      </Box>
+  const hasUwToolkit = pageAccordionIds.some(
+    (accordionId) =>
+      isUwToolkitAccordion(String(accordionId)),
+  );
+  const SummaryComponent =
+    normalizeValue(roleType) === "CVT_TASK"
+      ? CVTApplicantSummary
+      : (normalizeValue(roleType) === "DVT_TASK" || normalizeValue(roleType) === "DVT_FORMAL_TASK") ? DVTApplicantSummary :ApplicantApplicationSummary;
+  const shouldShowSubmitButton =
+    roleType === "CPT_DATA_ENTRY_NMR_TASK" ||
+    roleType === "CPT_DATA_ENTRY_MR_TASK";
 
-      <CustomDialog
-        open={selectedDecision !== null}
-        onClose={() => setSelectedDecisionIndex(null)}
-        title=" "
-        maxWidth="sm"
-        fullWidth
+  const drsRecord = toRecord(drsData);
+  const summaryMembers = Array.isArray(drsRecord.summary)
+    ? drsRecord.summary
+    : [];
+  const shouldShowMemberSelection =
+    !["DVT_TASK", "DVT_FORMAL_TASK", "CVT_TASK", "MAS_TASK"].includes(
+      normalizeValue(roleType),
+    ) &&
+    summaryMembers.length > 1 &&
+    selectedMemberIndex === null;
+
+  if (shouldShowMemberSelection) {
+    return (
+      <Box
+        component="main"
+        sx={{
+          width: "100%",
+          height: `calc(100dvh - ${APP_HEADER_HEIGHT}px)`,
+          minHeight: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+          bgcolor: "#F8F6F5",
+        }}
       >
-        {selectedDecision && (
-          <Box sx={{ display: "grid", gap: 1 }}>
-            <Typography sx={{ bgcolor: "#E45F14", color: "#FFFFFF", p: 1, borderRadius: 1, fontSize: 13, fontWeight: 800 }}>
-              UW Decision — {selectedDecision.type}
-            </Typography>
-            <Typography sx={{ color: "#5C514C", fontSize: 12 }}>
-              {selectedDecision.name}
-            </Typography>
-            <Box sx={{ display: "grid", gap: 1.5, p: 1.5, border: "1px solid #E5E0DD", borderRadius: "8px", bgcolor: "#FBF8F6" }}>
-              {selectedDecision.details.map(([label, value]) => (
-                <Box key={label} sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(110px, 0.8fr) minmax(0, 1.2fr)", sm: "minmax(160px, 0.8fr) minmax(0, 1.2fr)" }, gap: 1.5, alignItems: "center" }}>
-                  <Typography sx={{ fontSize: 12, color: "#827671" }}>{label}</Typography>
-                  <Typography sx={{ fontSize: 13, color: "#292421", whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{value}</Typography>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        )}
-      </CustomDialog>
+        <MemberSelection
+          applicationNumber={applicationNo}
+          source={drsData}
+          onMemberSelect={(memberIndex) => {
+            setMemberSelection({
+              applicationNo,
+              memberIndex,
+            });
+          }}
+        />
 
-      <CustomDialog
-        open={riderDialogOpen}
-        onClose={() => setRiderDialogOpen(false)}
-        title="Rider Details"
-        maxWidth="lg"
+        <Box sx={{ mx: 0.5, mt: 1, pb: 1 }}>
+          <UWDecision />
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
+    <>
+      <Box
+        component="main"
+        sx={{
+          width: "100%",
+          height: `calc(100dvh - ${APP_HEADER_HEIGHT}px)`,
+          minHeight: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+          overscrollBehavior: "contain",
+          scrollbarGutter: "stable",
+        }}
       >
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "repeat(2,1fr)" },
-            gap: 0.8,
-            minWidth: { xs: "auto", md: 720 },
+            display: "flex",
+            flexDirection: "column",
+            // gap: 1,
+            pb: 1,
           }}
         >
-          {riders.map((rider) => (
-            <Box
-              key={rider.key}
-              sx={{
-                p: 0.9,
-                border: "1px solid #E4DEDB",
-                borderLeft: "4px solid #A92129",
-                borderRadius: 1.1,
-                bgcolor: "#FAF8F7",
-              }}
-            >
-              <Typography
-                sx={{ color: "#332D2A", fontSize: 12, fontWeight: 900 }}
-              >
-                {rider.name}
-              </Typography>
-
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 0.7,
-                  mt: 0.75,
-                }}
-              >
-                <CompactField label="Sum assured" value={rider.sumAssured} />
-                <CompactField label="Premium" value={rider.premium} />
-                <CompactField label="Policy term" value={rider.policyTerm} />
-                <CompactField label="Premium term" value={rider.premiumTerm} />
-              </Box>
-            </Box>
-          ))}
+          {
+             normalizeValue(roleType) === "FORMAL_GUW_TASK" ? (
+              <>
+                <GroupFormalGuwDrs />
+               <Box sx={{ mx: 0.5, mt: 1, pb: 1 }}>
+          <UWDecision />
         </Box>
-      </CustomDialog>
-    </Box>
+              </>
+            ) :
+             normalizeValue(roleType) === "FORMAL_SR_UW_TASK" ? (
+              <GroupFormalSrUwDrs
+              />
+            ) :
+             normalizeValue(roleType) === "FORMAL_HOD_TASK" ? (
+              <GroupFormalHoD 
+                
+              />
+            ) :
+             normalizeValue(roleType) === "FORMAL_CUW_CLAIM_AUDIT_TASK" ? (
+              <GroupFormalClaimAuditTask 
+                
+              />
+            ) :
+
+
+             normalizeValue(roleType) === "GROUP_CUW_TASK" ? (
+              <>
+              <GroupCUWDRS
+                 requirementManagement={
+                    RequirementManagementPanel ? (
+                      <RequirementManagementPanel embedded />
+                    ) : null
+                  }
+              />
+               <Box sx={{ mx: 0.5, mt: 1, pb: 1 }}>
+          <UWDecision />
+        </Box>
+              </>
+            ) :
+            normalizeValue(roleType) === "GROUP_SR_UW_TASK" ? (
+              <GroupSrUwDrs 
+                requirementManagement={
+                    RequirementManagementPanel ? (
+                      <RequirementManagementPanel embedded />
+                    ) : null
+                  }
+              />
+            ) :
+            normalizeValue(roleType) === "GROUP_HOD_TASK" ? (
+              <GroupHoD 
+                requirementManagement={
+                    RequirementManagementPanel ? (
+                      <RequirementManagementPanel embedded />
+                    ) : null
+                  }
+              />
+            ) :
+            normalizeValue(roleType) === "GROUP_GRIEVANCE_TASK" ? (
+              <GroupGrievance />
+            ) :
+            normalizeValue(roleType) === "GROUP_REF_CMO_TASK" ? (
+              <GroupRefCMOApplicationSummary 
+                requirementManagement={
+                    RequirementManagementPanel ? (
+                      <RequirementManagementPanel embedded />
+                    ) : null
+                  }
+              />
+            ) :
+            normalizeValue(roleType) === "GROUP_CMO_TASK" ? (
+              <GroupHOCMOApplicationSummary 
+                requirementManagement={
+                    RequirementManagementPanel ? (
+                      <RequirementManagementPanel embedded />
+                    ) : null
+                  }
+              />
+            ) :
+            normalizeValue(roleType) === "GROUP_VENDOR_CMO_TASK" ? (
+              <GroupVendorCMOApplicationSummary 
+                requirementManagement={
+                    RequirementManagementPanel ? (
+                      <RequirementManagementPanel embedded />
+                    ) : null
+                  }
+              />
+            ) :
+            normalizeValue(roleType) === "MAS_TASK" ? (
+              <MAS />
+            ) :
+            normalizeValue(roleType) === "HOD_TASK" ? (
+              <HodDrs />
+            ) :
+            normalizeValue(roleType) === "SR_UW_TASK" ? (
+              <SrUWDrs />
+            ) :
+            normalizeValue(roleType) === "CUW_CLAIM_AUDIT_TASK" ? (
+              <ClaimAudit />
+            ) :
+            normalizeValue(roleType) === "GROUP_CUW_CLAIM_AUDIT_TASK" ? (
+              <GroupClaimAuditTask />
+            ) :
+            normalizeValue(roleType) === "PIVV_TASK" ? (
+              <PIVVDrs />
+            ) :
+            normalizeValue(roleType) === "RAISE_GRIEVANCE_TASK" ? (
+              <RaiseGrievance />
+            ) :
+            normalizeValue(roleType) === "GRIEVANCE_TASK" ? (
+              <Grievance
+              />
+            ) :
+
+              normalizeValue(roleType) === "CMO_TASK" ? (
+                <HOCMOApplicationSummary
+                  stickyTop={0}
+                  onBackToInbox={() => navigate(getInboxPath())}
+                  requirementManagement={
+                    RequirementManagementPanel ? (
+                      <RequirementManagementPanel embedded />
+                    ) : null
+                  }
+                  decisionHistory={
+                    DecisionHistoryPanel ? (
+                      <DecisionHistoryPanel embedded />
+                    ) : null
+                  }
+                />
+              ) :
+                normalizeValue(roleType) === "REF_CMO_TASK" ? (
+                  <RefCMOApplicationSummary
+                    stickyTop={0}
+                    onBackToInbox={() => navigate(getInboxPath())}
+                    requirementManagement={
+                      RequirementManagementPanel ? (
+                        <RequirementManagementPanel embedded />
+                      ) : null
+                    }
+                    decisionHistory={
+                      DecisionHistoryPanel ? (
+                        <DecisionHistoryPanel embedded />
+                      ) : null
+                    }
+                  />
+                ) :
+                  normalizeValue(roleType) === "VENDOR_CMO_TASK" ? (
+                    <VendorCMOApplicationSummary
+                      stickyTop={0}
+                      onBackToInbox={() => navigate(getInboxPath())}
+                      requirementManagement={
+                        RequirementManagementPanel ? (
+                          <RequirementManagementPanel embedded />
+                        ) : null
+                      }
+                      decisionHistory={
+                        DecisionHistoryPanel ? (
+                          <DecisionHistoryPanel embedded />
+                        ) : null
+                      }
+                    />
+                  ) : (
+                    <SummaryComponent
+                      key={applicationNo}
+                      stickyTop={0}
+                      initialMemberIndex={selectedMemberIndex ?? 0}
+                      showMemberSelectionInitially={false}
+                      onBackToInbox={() => navigate(getInboxPath())}
+                      requirementManagement={
+                        RequirementManagementPanel ? (
+                          <RequirementManagementPanel embedded />
+                        ) : null
+                      }
+                      decisionHistory={
+                        DecisionHistoryPanel ? (
+                          <DecisionHistoryPanel embedded />
+                        ) : null
+                      }
+                    />
+                  )}
+
+          {pageAccordionIds.map((accordionId) => {
+            const AccordionComponent =
+              accordionRegistry[accordionId];
+
+            if (!AccordionComponent) {
+              return null;
+            }
+
+            const showSubmitBeforeAccordion =
+              isUwToolkitAccordion(
+                String(accordionId),
+              );
+
+            return (
+              <Box key={accordionId}>
+                {shouldShowSubmitButton && showSubmitBeforeAccordion &&
+                  renderSubmitButton()}
+
+                <AccordionComponent />
+              </Box>
+            );
+          })}
+
+          {shouldShowSubmitButton && !hasUwToolkit &&
+            renderSubmitButton()}
+        </Box>
+      </Box>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        onClose={() =>
+          setSnackbar((current) => ({
+            ...current,
+            open: false,
+          }))
+        }
+      >
+        <Alert
+          severity={snackbar.severity}
+          variant="filled"
+          onClose={() =>
+            setSnackbar((current) => ({
+              ...current,
+              open: false,
+            }))
+          }
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 
-export default MemberSelection;
+export default DRS;

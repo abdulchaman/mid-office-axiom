@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
 
 import type { AppDispatch, RootState } from "../../../store/store";
 import { drsThunk } from "../../../store/thunks/drsThunk";
@@ -16,8 +17,9 @@ import CustomTextField from "../../../components/ui/TextField/TextField";
 import { labelStyles } from "../../../utils/styles";
 import type { ApplicantProfileSubmitRequest } from "../../../types/drs.types";
 import { applicantProfileSubmitThunk } from "../../../store/thunks/applicantProfileSubmitThunk";
-import { useParams } from "react-router-dom";
 import CustomSnackbar from "../../../components/ui/SnackBar/Snackbar";
+import type { Column } from "../../../components/ui/Table/Table";
+import CustomTable from "../../../components/ui/Table/Table";
 
 type Address = {
   type?: string;
@@ -32,11 +34,13 @@ type Address = {
 
 type EditableMember = {
   memberType?: string;
+
   proposerSummary?: {
     dob?: string;
     gender?: string;
     residentStatus?: string;
   };
+
   kycDetails?: {
     panNumber?: string;
     pranNo?: string;
@@ -44,6 +48,7 @@ type EditableMember = {
     addressProof?: string;
     ageProof?: string;
   };
+
   address?: Address[];
 };
 
@@ -79,6 +84,7 @@ type MasterOption = {
   isActive?: string;
   hasExpiry?: string;
 };
+
 type ApplicantProfileMasters = {
   gender?: MasterOption[];
   resident_status?: MasterOption[];
@@ -102,11 +108,12 @@ const getApplicantProfileMasters = (
 ): ApplicantProfileMasters => {
   let current: unknown = value;
 
-  // Different thunk/helper implementations keep the API response under
-  // data, payload or result. Unwrap those containers until the master keys
-  // from the API response are found.
   for (let depth = 0; depth < 5; depth += 1) {
-    if (!current || typeof current !== "object" || Array.isArray(current)) {
+    if (
+      !current ||
+      typeof current !== "object" ||
+      Array.isArray(current)
+    ) {
       break;
     }
 
@@ -120,7 +127,10 @@ const getApplicantProfileMasters = (
       return candidate;
     }
 
-    current = candidate.data ?? candidate.payload ?? candidate.result;
+    current =
+      candidate.data ??
+      candidate.payload ??
+      candidate.result;
   }
 
   return EMPTY_APPLICANT_MASTERS;
@@ -137,6 +147,13 @@ type ApiError = {
   payload?: {
     message?: string;
   };
+};
+
+type ReviewChange = {
+  field: keyof FormValues;
+  label: string;
+  before: string;
+  after: string;
 };
 
 const getActiveOptions = (
@@ -183,7 +200,37 @@ const normalizeMasterValue = (
     );
   });
 
-  return matchedOption?.code ?? String(value ?? "");
+  return (
+    matchedOption?.code ??
+    String(value ?? "")
+  );
+};
+
+const getMasterDescription = (
+  value: string,
+  options?: MasterOption[],
+): string => {
+  if (!value) {
+    return "";
+  }
+
+  const normalizedValue = value
+    .trim()
+    .toLowerCase();
+
+  const option = options?.find((item) => {
+    return (
+      item.code.trim().toLowerCase() ===
+        normalizedValue ||
+      item.description.trim().toLowerCase() ===
+        normalizedValue ||
+      String(item.value ?? "")
+        .trim()
+        .toLowerCase() === normalizedValue
+    );
+  });
+
+  return option?.description ?? value;
 };
 
 const EMPTY_FORM: FormValues = {
@@ -200,17 +247,29 @@ const EMPTY_FORM: FormValues = {
 };
 
 const text = (value: unknown) =>
-  value === null || value === undefined ? "" : String(value);
+  value === null || value === undefined
+    ? ""
+    : String(value);
 
 const dateOnly = (value?: string) => {
   const rawValue = value?.trim();
 
-  if (!rawValue) return "";
+  if (!rawValue) {
+    return "";
+  }
 
-  const isoMatch = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+  const isoMatch = rawValue.match(
+    /^(\d{4})-(\d{2})-(\d{2})/,
+  );
 
-  const indianDateMatch = rawValue.match(/^(\d{2})[/-](\d{2})[/-](\d{4})$/);
+  if (isoMatch) {
+    return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+  }
+
+  const indianDateMatch = rawValue.match(
+    /^(\d{2})[/-](\d{2})[/-](\d{4})$/,
+  );
+
   if (indianDateMatch) {
     return `${indianDateMatch[3]}-${indianDateMatch[2]}-${indianDateMatch[1]}`;
   }
@@ -218,9 +277,15 @@ const dateOnly = (value?: string) => {
   return "";
 };
 
-const findAddress = (addresses: Address[] = [], type: string) =>
+const findAddress = (
+  addresses: Address[] = [],
+  type: string,
+) =>
   addresses.find((address) =>
-    address.type?.trim().toLowerCase().includes(type),
+    address.type
+      ?.trim()
+      .toLowerCase()
+      .includes(type),
   );
 
 const mapMemberToForm = (
@@ -289,33 +354,55 @@ const mapMemberToForm = (
   };
 };
 
-
-const extractSummary = (response: unknown): EditableMember[] => {
+const extractSummary = (
+  response: unknown,
+): EditableMember[] => {
   const result = response as {
-    data?: { data?: { summary?: EditableMember[] }; summary?: EditableMember[] };
+    data?: {
+      data?: {
+        summary?: EditableMember[];
+      };
+      summary?: EditableMember[];
+    };
     summary?: EditableMember[];
   };
-  return result?.data?.data?.summary ?? result?.data?.summary ?? result?.summary ?? [];
+
+  return (
+    result?.data?.data?.summary ??
+    result?.data?.summary ??
+    result?.summary ??
+    []
+  );
 };
 
-const validate = (values: FormValues): FormErrors => {
+const validate = (
+  values: FormValues,
+): FormErrors => {
   const errors: FormErrors = {};
 
-  const labels: Record<keyof FormValues, string> = {
+  const labels: Record<
+    keyof FormValues,
+    string
+  > = {
     dob: "DOB",
     gender: "Gender",
-    residentialStatus: "Residential Status",
+    residentialStatus:
+      "Residential Status",
     panNumber: "PAN Number",
     pranNumber: "PRAN Number",
     identityProof: "Identity Proof",
     ageProof: "Age Proof",
     addressProof: "Address Proof",
-    communicationPincode: "Comm. Pincode",
-    permanentPincode: "Perm. Pincode",
+    communicationPincode:
+      "Comm. Pincode",
+    permanentPincode:
+      "Perm. Pincode",
   };
 
-  // All fields are mandatory except PRAN number.
-  const requiredFields: Array<keyof FormValues> = [
+  // PRAN is optional.
+  const requiredFields: Array<
+    keyof FormValues
+  > = [
     "dob",
     "gender",
     "residentialStatus",
@@ -327,17 +414,20 @@ const validate = (values: FormValues): FormErrors => {
     "permanentPincode",
   ];
 
-  // Required field validation
   requiredFields.forEach((field) => {
-    const value = String(values[field] ?? "").trim();
+    const value = String(
+      values[field] ?? "",
+    ).trim();
 
     if (!value) {
-      errors[field] = `${labels[field]} is required`;
+      errors[field] =
+        `${labels[field]} is required`;
     }
   });
 
-  // Explicit dropdown validation
-  const requiredDropdowns: Array<keyof FormValues> = [
+  const requiredDropdowns: Array<
+    keyof FormValues
+  > = [
     "gender",
     "residentialStatus",
     "identityProof",
@@ -346,10 +436,13 @@ const validate = (values: FormValues): FormErrors => {
   ];
 
   requiredDropdowns.forEach((field) => {
-    const value = String(values[field] ?? "").trim();
+    const value = String(
+      values[field] ?? "",
+    ).trim();
 
     if (!value) {
-      errors[field] = `Please select ${labels[field]}`;
+      errors[field] =
+        `Please select ${labels[field]}`;
     }
   });
 
@@ -363,44 +456,65 @@ const validate = (values: FormValues): FormErrors => {
     if (Number.isNaN(dob.getTime())) {
       errors.dob = "Enter a valid DOB";
     } else if (dob > today) {
-      errors.dob = "DOB cannot be in the future";
+      errors.dob =
+        "DOB cannot be in the future";
     }
   }
 
   // PAN validation
-  const pan = values.panNumber.trim().toUpperCase();
+  const pan = values.panNumber
+    .trim()
+    .toUpperCase();
 
   if (pan) {
     if (pan.length !== 10) {
-      errors.panNumber = "PAN Number must be exactly 10 characters";
-    } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) {
-      errors.panNumber = "Enter a valid PAN Number";
+      errors.panNumber =
+        "PAN Number must be exactly 10 characters";
+    } else if (
+      !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)
+    ) {
+      errors.panNumber =
+        "Enter a valid PAN Number";
     }
   }
 
   // PRAN validation
-  // PRAN is optional.
-  const pran = values.pranNumber.trim();
+  const pran =
+    values.pranNumber.trim();
 
-  if (pran && !/^\d{12}$/.test(pran)) {
-    errors.pranNumber = "PRAN Number must be exactly 12 digits";
+  if (
+    pran &&
+    !/^\d{12}$/.test(pran)
+  ) {
+    errors.pranNumber =
+      "PRAN Number must be exactly 12 digits";
   }
 
-  // Communication Pincode validation
-  const communicationPincode = values.communicationPincode.trim();
+  // Communication Pincode
+  const communicationPincode =
+    values.communicationPincode.trim();
 
   if (communicationPincode) {
-    if (!/^\d{6}$/.test(communicationPincode)) {
+    if (
+      !/^\d{6}$/.test(
+        communicationPincode,
+      )
+    ) {
       errors.communicationPincode =
         "Comm. Pincode must be exactly 6 digits";
     }
   }
 
-  // Permanent Pincode validation
-  const permanentPincode = values.permanentPincode.trim();
+  // Permanent Pincode
+  const permanentPincode =
+    values.permanentPincode.trim();
 
   if (permanentPincode) {
-    if (!/^\d{6}$/.test(permanentPincode)) {
+    if (
+      !/^\d{6}$/.test(
+        permanentPincode,
+      )
+    ) {
       errors.permanentPincode =
         "Perm. Pincode must be exactly 6 digits";
     }
@@ -409,56 +523,218 @@ const validate = (values: FormValues): FormErrors => {
   return errors;
 };
 
+const createUpdatedMember = (
+  member: EditableMember,
+  formValues: FormValues,
+): EditableMember => {
+  const existingAddresses =
+    member.address ?? [];
+
+  const updatedAddresses =
+    existingAddresses.map(
+      (address) => {
+        const addressType =
+          address.type
+            ?.trim()
+            .toLowerCase();
+
+        if (
+          addressType ===
+          "communication"
+        ) {
+          return {
+            ...address,
+            pinCode:
+              formValues.communicationPincode.trim(),
+          };
+        }
+
+        if (
+          addressType === "permanent"
+        ) {
+          return {
+            ...address,
+            pinCode:
+              formValues.permanentPincode.trim(),
+          };
+        }
+
+        return address;
+      },
+    );
+
+  return {
+    ...member,
+
+    proposerSummary: {
+      ...member.proposerSummary,
+
+      dob: formValues.dob,
+
+      gender: formValues.gender,
+
+      residentStatus:
+        formValues.residentialStatus,
+    },
+
+    kycDetails: {
+      ...member.kycDetails,
+
+      panNumber:
+        formValues.panNumber
+          .trim()
+          .toUpperCase(),
+
+      pranNo:
+        formValues.pranNumber.trim(),
+
+      identityProofType:
+        formValues.identityProof,
+
+      ageProof:
+        formValues.ageProof,
+
+      addressProof:
+        formValues.addressProof,
+    },
+
+    address: updatedAddresses,
+  };
+};
+
+const reviewColumns: Column<ReviewChange>[] = [
+  {
+    key: "label",
+    header: "Field",
+    width: "30%",
+  },
+  {
+    key: "before",
+    header: "Before",
+    width: "35%",
+    render: (value) => (
+      <Typography
+        sx={{
+          fontSize: "11px",
+          color: "#666",
+        }}
+      >
+        {String(value || "-")}
+      </Typography>
+    ),
+  },
+  {
+    key: "after",
+    header: "After",
+    width: "35%",
+    render: (value) => (
+      <Typography
+        sx={{
+          fontSize: "11px",
+          color: "#9A2529",
+          fontWeight: 600,
+        }}
+      >
+        {String(value || "-")}
+      </Typography>
+    ),
+  },
+];
+
+
 const EditApplicantProfile = ({
   open,
   memberIndex,
   onClose,
   onSave,
 }: EditApplicantProfileProps) => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch =
+    useDispatch<AppDispatch>();
+
   const {
     applicationNumber,
-    businessType: routeBusinessType,
+    businessType:
+      routeBusinessType,
   } = useParams<{
     applicationNumber: string;
     businessType: string;
   }>();
-  const roleType = localStorage.getItem("roleType") ?? "CVT_TASK";
-  const userId = localStorage.getItem("username") ?? "";
-  const businessType = String(
-    routeBusinessType ??
-      localStorage.getItem("businessType") ??
-      "retail",
-  )
-    .trim()
-    .toLowerCase() || "retail";
-  /*
-   * MasterDataRoute reloads this shared slice after a browser refresh.
-   * Do not read state.drs.masters here because that is not the slice
-   * populated by the application-level master-data initializer.
-   */
-  const masters = useSelector((state: RootState) =>
-    getApplicantProfileMasters(state.masterData),
+
+  const roleType =
+    localStorage.getItem(
+      "roleType",
+    ) ?? "CVT_TASK";
+
+  const userId =
+    localStorage.getItem(
+      "username",
+    ) ?? "";
+
+  const businessType =
+    String(
+      routeBusinessType ??
+        localStorage.getItem(
+          "businessType",
+        ) ??
+        "retail",
+    )
+      .trim()
+      .toLowerCase() || "retail";
+
+  const masters = useSelector(
+    (state: RootState) =>
+      getApplicantProfileMasters(
+        state.masterData,
+      ),
   );
-  console.log('masters', masters)
-  const drsData = useSelector((state: RootState) => state.drs.data);
-  const [values, setValues] = useState<FormValues>(EMPTY_FORM);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState("");
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "error" | "warning" | "info";
-  }>({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+
+  const drsData = useSelector(
+    (state: RootState) =>
+      state.drs.data,
+  );
+
+  const [values, setValues] =
+    useState<FormValues>(
+      EMPTY_FORM,
+    );
+
+  const [errors, setErrors] =
+    useState<FormErrors>({});
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [apiError, setApiError] =
+    useState("");
+
+  const [reviewOpen, setReviewOpen] =
+    useState(false);
+
+  const [reviewChanges, setReviewChanges] =
+    useState<ReviewChange[]>([]);
+
+  const [snackbar, setSnackbar] =
+    useState<{
+      open: boolean;
+      message: string;
+      severity:
+        | "success"
+        | "error"
+        | "warning"
+        | "info";
+    }>({
+      open: false,
+      message: "",
+      severity: "success",
+    });
 
   const showSnackbar = (
     message: string,
-    severity: "success" | "error" | "warning" | "info",
+    severity:
+      | "success"
+      | "error"
+      | "warning"
+      | "info",
   ) => {
     setSnackbar({
       open: true,
@@ -468,53 +744,82 @@ const EditApplicantProfile = ({
   };
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
+
     let active = true;
 
     const loadProfile = async () => {
       setLoading(true);
       setApiError("");
       setErrors({});
+
       try {
-        const roleType = localStorage.getItem("roleType") ?? "CVT_TASK";
-        const userId = localStorage.getItem("userId") ?? "";
-        const response = await dispatch(
-          drsThunk({
-            applicationNo: applicationNumber ?? "",
-            userId,
-            roleType,
-            businessType,
-            sections: [
-              "breDecision",
-              "summary",
-              "applicationOverview",
-              "pivvSection",
-              "requirementManagement",
-              "decision",
-              "quickLinks"
-            ],
-          }),
-        ).unwrap();
+        const roleType =
+          localStorage.getItem(
+            "roleType",
+          ) ?? "CVT_TASK";
+
+        const userId =
+          localStorage.getItem(
+            "userId",
+          ) ?? "";
+
+        const response =
+          await dispatch(
+            drsThunk({
+              applicationNo:
+                applicationNumber ?? "",
+
+              userId,
+
+              roleType,
+
+              businessType,
+
+              sections: [
+                "breDecision",
+                "summary",
+                "applicationOverview",
+                "pivvSection",
+                "requirementManagement",
+                "decision",
+                "quickLinks",
+              ],
+            }),
+          ).unwrap();
+
         if (active) {
           const member =
-            extractSummary(response)[memberIndex];
+            extractSummary(
+              response,
+            )[memberIndex];
 
           setValues(
-            mapMemberToForm(member, masters),
+            mapMemberToForm(
+              member,
+              masters,
+            ),
           );
         }
       } catch (error) {
         if (active) {
           setApiError(
-            error instanceof Error ? error.message : "Unable to load applicant details",
+            error instanceof Error
+              ? error.message
+              : "Unable to load applicant details",
           );
         }
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 
     void loadProfile();
+
     return () => {
       active = false;
     };
@@ -526,7 +831,11 @@ const EditApplicantProfile = ({
     masters,
     businessType,
   ]);
-  const update = (field: keyof FormValues, value: string) => {
+
+  const update = (
+    field: keyof FormValues,
+    value: string,
+  ) => {
     let nextValue = value;
 
     if (field === "panNumber") {
@@ -543,8 +852,10 @@ const EditApplicantProfile = ({
     }
 
     if (
-      field === "communicationPincode" ||
-      field === "permanentPincode"
+      field ===
+        "communicationPincode" ||
+      field ===
+        "permanentPincode"
     ) {
       nextValue = value
         .replace(/\D/g, "")
@@ -556,106 +867,34 @@ const EditApplicantProfile = ({
       [field]: nextValue,
     }));
 
-    // Clear the current field's error as soon as the user changes it.
     setErrors((current) => {
       if (!current[field]) {
         return current;
       }
 
-      const nextErrors = { ...current };
+      const nextErrors = {
+        ...current,
+      };
+
       delete nextErrors[field];
 
       return nextErrors;
     });
   };
 
-const createUpdatedMember = (
-  member: EditableMember,
-
-  formValues: FormValues,
-
-): EditableMember => {
-
-  const existingAddresses = member.address ?? [];
- 
-  const updatedAddresses = existingAddresses.map((address) => {
-
-    const addressType = address.type?.trim().toLowerCase();
- 
-    if (addressType === "communication") {
-
-      return {
-
-        ...address,
-
-        pinCode: formValues.communicationPincode.trim(),
-
-      };
-
-    }
- 
-    if (addressType === "permanent") {
-
-      return {
-
-        ...address,
-
-        pinCode: formValues.permanentPincode.trim(),
-
-      };
-
-    }
- 
-    return address;
-
-  });
- 
-  return {
-
-    ...member,
- 
-    proposerSummary: {
-
-      ...member.proposerSummary,
-
-      dob: formValues.dob,
-
-      gender: formValues.gender,
-
-      residentStatus: formValues.residentialStatus,
-
-    },
- 
-    kycDetails: {
-
-      ...member.kycDetails,
-
-      panNumber: formValues.panNumber.trim().toUpperCase(),
-
-      pranNo: formValues.pranNumber.trim(),
-
-      identityProofType: formValues.identityProof,
-
-      ageProof: formValues.ageProof,
-
-      addressProof: formValues.addressProof,
-
-    },
- 
-    address: updatedAddresses,
-
-  };
-
-};
- 
-
-  const getErrorMessage = (error: unknown): string => {
+  const getErrorMessage = (
+    error: unknown,
+  ): string => {
     if (error instanceof Error) {
       return error.message;
     }
 
-    if (typeof error === "object" && error !== null) {
-      const apiError = error as ApiError;
+    if (
+      typeof error === "object" &&
+      error !== null
+    ) {
+      const apiError =
+        error as ApiError;
 
       return (
         apiError.payload?.message ||
@@ -667,79 +906,294 @@ const createUpdatedMember = (
     return "Unable to save applicant details";
   };
 
-  const handleSave = async () => {
-    const nextErrors = validate(values);
+  /**
+   * Returns only fields whose values have changed.
+   */
+  const getChangedFields = (
+    oldValues: FormValues,
+    newValues: FormValues,
+  ): ReviewChange[] => {
+    const labels: Record<
+      keyof FormValues,
+      string
+    > = {
+      dob: "DOB",
+      gender: "Gender",
+      residentialStatus:
+        "Residential Status",
+      panNumber: "PAN Number",
+      pranNumber: "PRAN Number",
+      identityProof:
+        "Identity Proof",
+      ageProof: "Age Proof",
+      addressProof:
+        "Address Proof",
+      communicationPincode:
+        "Comm. Pincode",
+      permanentPincode:
+        "Perm. Pincode",
+    };
+
+    return (
+      Object.keys(
+        labels,
+      ) as Array<keyof FormValues>
+    )
+      .filter((field) => {
+        const before = String(
+          oldValues[field] ?? "",
+        ).trim();
+
+        const after = String(
+          newValues[field] ?? "",
+        ).trim();
+
+        return before !== after;
+      })
+      .map((field) => {
+        let before = String(
+          oldValues[field] ?? "",
+        ).trim();
+
+        let after = String(
+          newValues[field] ?? "",
+        ).trim();
+
+        /**
+         * Convert master codes into descriptions
+         * for the review popup.
+         */
+        if (field === "gender") {
+          before = getMasterDescription(
+            before,
+            masters.gender,
+          );
+
+          after = getMasterDescription(
+            after,
+            masters.gender,
+          );
+        }
+
+        if (
+          field ===
+          "residentialStatus"
+        ) {
+          before = getMasterDescription(
+            before,
+            masters.resident_status,
+          );
+
+          after = getMasterDescription(
+            after,
+            masters.resident_status,
+          );
+        }
+
+        if (
+          field === "identityProof" ||
+          field === "ageProof" ||
+          field === "addressProof"
+        ) {
+          before = getMasterDescription(
+            before,
+            masters.id_proof_type,
+          );
+
+          after = getMasterDescription(
+            after,
+            masters.id_proof_type,
+          );
+        }
+
+        return {
+          field,
+          label: labels[field],
+          before: before || "-",
+          after: after || "-",
+        };
+      });
+  };
+
+  /**
+   * Save button:
+   * validate -> compare -> open review popup.
+   *
+   * API is NOT called here.
+   */
+  const handleSave = () => {
+    const nextErrors =
+      validate(values);
 
     setErrors(nextErrors);
 
-    if (Object.keys(nextErrors).length > 0) {
+    if (
+      Object.keys(nextErrors).length >
+      0
+    ) {
       return;
     }
 
-    if (!drsData?.summary?.[memberIndex]) {
-      showSnackbar("Unable to find applicant details", "error");
+    if (
+      !drsData?.summary?.[
+        memberIndex
+      ]
+    ) {
+      showSnackbar(
+        "Unable to find applicant details",
+        "error",
+      );
+
       return;
     }
 
+    const currentMember =
+      drsData.summary[
+        memberIndex
+      ];
+
+    const originalValues =
+      mapMemberToForm(
+        currentMember,
+        masters,
+      );
+
+    const changes =
+      getChangedFields(
+        originalValues,
+        values,
+      );
+
+    if (changes.length === 0) {
+      showSnackbar(
+        "No changes were made to the applicant profile",
+        "info",
+      );
+
+      return;
+    }
+
+    setReviewChanges(changes);
+    setReviewOpen(true);
+  };
+
+  /**
+   * This is the actual API call.
+   * It is called ONLY after the user clicks
+   * "Confirm & Save" in the review popup.
+   */
+  const confirmSave = async () => {
+    if (
+      !drsData?.summary?.[
+        memberIndex
+      ]
+    ) {
+      showSnackbar(
+        "Unable to find applicant details",
+        "error",
+      );
+
+      return;
+    }
+
+    setReviewOpen(false);
     setLoading(true);
     setApiError("");
 
     try {
-      const currentMember = drsData.summary[memberIndex];
+      const currentMember =
+        drsData.summary[
+          memberIndex
+        ];
 
-      const updatedMember = createUpdatedMember(
-        currentMember,
-        values,
-      );
+      const updatedMember =
+        createUpdatedMember(
+          currentMember,
+          values,
+        );
 
-      const updatedSummary = drsData.summary.map((member, index) =>
-        index === memberIndex ? updatedMember : member,
-      );
+      const updatedSummary =
+        drsData.summary.map(
+          (member, index) =>
+            index === memberIndex
+              ? updatedMember
+              : member,
+        );
 
       const payload: ApplicantProfileSubmitRequest & {
         businessType: string;
       } = {
-        applicationNo: applicationNumber ?? "",
+        applicationNo:
+          applicationNumber ?? "",
+
         roleType,
+
         sections: ["summary"],
+
         userId,
+
         businessType,
+
         data: {
           ...drsData,
           summary: updatedSummary,
         },
+
         isAccuity: true,
       };
-      console.log('payload--------', payload)
+
+      console.log(
+        "payload--------",
+        payload,
+      );
+
       const response: ApplicantProfileSubmitResponse =
         await dispatch(
-          applicantProfileSubmitThunk(payload),
+          applicantProfileSubmitThunk(
+            payload,
+          ),
         ).unwrap();
 
-      console.log("Applicant profile save response:", response);
+      console.log(
+        "Applicant profile save response:",
+        response,
+      );
 
       if (response.success) {
         showSnackbar(
-          response.message || "Applicant profile updated successfully",
+          response.message ||
+            "Applicant profile updated successfully",
           "success",
         );
 
-        await onSave?.(values, memberIndex);
+        await onSave?.(
+          values,
+          memberIndex,
+        );
+
         onClose();
       } else {
         showSnackbar(
-          response.message || "Unable to update applicant profile",
+          response.message ||
+            "Unable to update applicant profile",
           "error",
         );
       }
     } catch (error: unknown) {
-      const errorMessage = getErrorMessage(error);
+      const errorMessage =
+        getErrorMessage(error);
 
-      console.error("Applicant profile save error:", error);
+      console.error(
+        "Applicant profile save error:",
+        error,
+      );
 
       setApiError(errorMessage);
 
-      showSnackbar(errorMessage, "error");
+      showSnackbar(
+        errorMessage,
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -759,30 +1213,45 @@ const createUpdatedMember = (
 
     return (
       <Box>
-        <Typography sx={labelStyles}>
+        <Typography
+          sx={labelStyles}
+        >
           {label}
         </Typography>
 
         <CustomTextField
           select={isDropdown}
-          type={name === "dob" ? "date" : "text"}
+          type={
+            name === "dob"
+              ? "date"
+              : "text"
+          }
           value={values[name]}
           onChange={(event) =>
-            update(name, event.target.value)
+            update(
+              name,
+              event.target.value,
+            )
           }
-          error={Boolean(errors[name])}
-          htmlInputProps={htmlInputProps}
+          error={Boolean(
+            errors[name],
+          )}
+          htmlInputProps={
+            htmlInputProps
+          }
           fullWidth
           size="small"
         >
-          {activeOptions.map((option) => (
-            <MenuItem
-              key={option.code}
-              value={option.code}
-            >
-              {option.description}
-            </MenuItem>
-          ))}
+          {activeOptions.map(
+            (option) => (
+              <MenuItem
+                key={option.code}
+                value={option.code}
+              >
+                {option.description}
+              </MenuItem>
+            ),
+          )}
         </CustomTextField>
 
         {errors[name] && (
@@ -802,6 +1271,9 @@ const createUpdatedMember = (
 
   return (
     <>
+      {/* =========================
+          EDIT APPLICANT DIALOG
+          ========================= */}
       <CustomDialog
         open={open}
         onClose={onClose}
@@ -817,32 +1289,61 @@ const createUpdatedMember = (
             EDIT APPLICANT PROFILE
           </Typography>
         }
-        actionsSx={{ justifyContent: "center", pb: 2 }}
+        actionsSx={{
+          justifyContent: "center",
+          pb: 2,
+          gap: 1,
+        }}
         actions={
-          <CustomButton
-            onClick={handleSave}
-            disabled={loading || Boolean(apiError)}
-            sx={{
-              px: 4,
-              borderRadius: "50px",
-            }}
-          >
-            {loading ? "Saving..." : "Save"}
-          </CustomButton>
+          <>
+            <CustomButton
+              // Keep your existing Revalidate PAN behaviour here
+              sx={{
+                px: 4,
+                borderRadius: "50px",
+              }}
+            >
+              Revalidate PAN
+            </CustomButton>
+
+            <CustomButton
+              onClick={handleSave}
+              disabled={
+                loading ||
+                Boolean(apiError)
+              }
+              sx={{
+                px: 4,
+                borderRadius: "50px",
+              }}
+            >
+              {loading
+                ? "Saving..."
+                : "Save"}
+            </CustomButton>
+          </>
         }
       >
         {loading ? (
-          <Box sx={{ minHeight: 300, display: "grid", placeItems: "center" }}>
+          <Box
+            sx={{
+              minHeight: 300,
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
             <CircularProgress />
           </Box>
         ) : (
           <Box
             sx={{
-              backgroundColor: "#F6F6F6",
+              backgroundColor:
+                "#F6F6F6",
               borderRadius: 2,
               p: 2,
             }}
           >
+            {/* Personal & KYC */}
             <Box>
               <Typography
                 sx={{
@@ -858,34 +1359,46 @@ const createUpdatedMember = (
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: {
-                    xs: "1fr",
-                    md: "repeat(3, 1fr)",
-                  },
+                  gridTemplateColumns:
+                    {
+                      xs: "1fr",
+                      md: "repeat(3, 1fr)",
+                    },
                   gap: 1,
                 }}
               >
-                {field("dob", "DOB", undefined, {
-                  max: new Date().toISOString().split("T")[0],
-                })}
+                {field(
+                  "dob",
+                  "DOB",
+                  undefined,
+                  {
+                    max: new Date()
+                      .toISOString()
+                      .split("T")[0],
+                  },
+                )}
 
                 {field(
                   "gender",
                   "Gender",
-                  masters.gender ?? [],
+                  masters.gender ??
+                    [],
                 )}
 
                 {field(
                   "residentialStatus",
                   "Residential Status",
-                  masters.resident_status ?? [],
+                  masters.resident_status ??
+                    [],
                 )}
 
                 {field(
                   "panNumber",
                   "PAN Number",
                   undefined,
-                  { maxLength: 10 }
+                  {
+                    maxLength: 10,
+                  },
                 )}
 
                 {field(
@@ -894,26 +1407,32 @@ const createUpdatedMember = (
                   undefined,
                   {
                     maxLength: 12,
-                    inputMode: "numeric",
-                  }
+                    inputMode:
+                      "numeric",
+                  },
                 )}
 
                 {field(
                   "identityProof",
                   "Identity Proof",
-                  masters.id_proof_type ?? [],
+                  masters.id_proof_type ??
+                    [],
                 )}
 
                 {field(
                   "ageProof",
                   "Age Proof",
-                  masters.id_proof_type ?? [],
+                  masters.id_proof_type ??
+                    [],
                 )}
               </Box>
             </Box>
 
-            <Divider sx={{ my: 2 }} />
+            <Divider
+              sx={{ my: 2 }}
+            />
 
+            {/* Contact & Address */}
             <Box>
               <Typography
                 sx={{
@@ -929,17 +1448,19 @@ const createUpdatedMember = (
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: {
-                    xs: "1fr",
-                    md: "repeat(3, 1fr)",
-                  },
+                  gridTemplateColumns:
+                    {
+                      xs: "1fr",
+                      md: "repeat(3, 1fr)",
+                    },
                   gap: 2,
                 }}
               >
                 {field(
                   "addressProof",
                   "Address Proof",
-                  masters.id_proof_type ?? [],
+                  masters.id_proof_type ??
+                    [],
                 )}
 
                 {field(
@@ -948,8 +1469,9 @@ const createUpdatedMember = (
                   undefined,
                   {
                     maxLength: 6,
-                    inputMode: "numeric",
-                  }
+                    inputMode:
+                      "numeric",
+                  },
                 )}
 
                 {field(
@@ -958,8 +1480,9 @@ const createUpdatedMember = (
                   undefined,
                   {
                     maxLength: 6,
-                    inputMode: "numeric",
-                  }
+                    inputMode:
+                      "numeric",
+                  },
                 )}
               </Box>
             </Box>
@@ -967,20 +1490,121 @@ const createUpdatedMember = (
         )}
       </CustomDialog>
 
+    {/* =========================
+    REVIEW CHANGES DIALOG
+    ========================= */}
+<CustomDialog
+  open={reviewOpen}
+  onClose={() => setReviewOpen(false)}
+  maxWidth="md"
+  title={
+    <Typography
+      sx={{
+        color: "#9A2529",
+        fontSize: 14,
+        fontWeight: 700,
+      }}
+    >
+      REVIEW CHANGES
+    </Typography>
+  }
+  actionsSx={{
+    justifyContent: "center",
+    pb: 2,
+    gap: 1,
+  }}
+  actions={
+    <>
+      <CustomButton
+        onClick={() => setReviewOpen(false)}
+        sx={{
+          px: 4,
+          borderRadius: "50px",
+          backgroundColor: "#777",
+          "&:hover": {
+            backgroundColor: "#666",
+          },
+        }}
+      >
+        Cancel
+      </CustomButton>
+
+      <CustomButton
+        onClick={confirmSave}
+        disabled={loading}
+        sx={{
+          px: 4,
+          borderRadius: "50px",
+        }}
+      >
+        {loading ? "Saving..." : "Confirm & Save"}
+      </CustomButton>
+    </>
+  }
+>
+  <Box
+    sx={{
+      backgroundColor: "#F6F6F6",
+      borderRadius: 2,
+      p: 2,
+    }}
+  >
+    {/* <Typography
+      sx={{
+        fontSize: 14,
+        fontWeight: 600,
+        color: "#444",
+        mb: 2,
+      }}
+    >
+      Please review the following changes before saving.
+    </Typography> */}
+
+    <CustomTable<ReviewChange>
+      columns={reviewColumns}
+      data={reviewChanges}
+    />
+
+    <Typography
+      sx={{
+        mt: 1.5,
+        fontSize: 12,
+        color: "#777",
+      }}
+    >
+      Only modified fields are shown.
+    </Typography>
+  </Box>
+</CustomDialog>
+
+
+
+      {/* =========================
+          SNACKBAR
+          ========================= */}
       <CustomSnackbar
         open={snackbar.open}
-        message={snackbar.message}
-        severity={snackbar.severity}
+        message={
+          snackbar.message
+        }
+        severity={
+          snackbar.severity
+        }
         onClose={() =>
-          setSnackbar((current) => ({
-            ...current,
-            open: false,
-          }))
+          setSnackbar(
+            (current) => ({
+              ...current,
+              open: false,
+            }),
+          )
         }
       />
     </>
   );
 };
 
-export type { FormValues as EditApplicantProfileValues };
+export type {
+  FormValues as EditApplicantProfileValues,
+};
+
 export default EditApplicantProfile;

@@ -99,7 +99,7 @@ const CustomDialog = ({
       <DialogContent
         sx={{
           pt: hasTitle ? 1 : 0.5,
-          pr: showCloseIcon ? 6 : 3,
+          // pr: showCloseIcon ? 3 : 3,
           ...contentSx,
         }}
       >

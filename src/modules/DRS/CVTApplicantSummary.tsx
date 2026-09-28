@@ -18,6 +18,7 @@ import ApplicantApplicationSummary from "./ApplicantSummary";
 import BreDecision from "./DRS_Accordions/BreDecision";
 import CustomDialog from "../../components/ui/Dialog/Dialog";
 import { RefreshIcon } from "../../icons/Icons";
+import CustomTable, { type Column } from "../../components/ui/Table/Table";
 
 type CVTApplicantSummaryProps = Omit<
   ComponentProps<typeof ApplicantApplicationSummary>,
@@ -118,6 +119,29 @@ const toStringList = (...values: unknown[]): string[] => {
 
   return items.length > 0 ? items : ["-"];
 };
+
+type DecisionHistoryRow = {
+  date: string;
+  userName: string;
+  userRole: string;
+  remarks: string;
+};
+
+const decisionHistoryColumns: Column<DecisionHistoryRow>[] = [
+  { key: "date", header: "Date", width: "18%" },
+  { key: "userName", header: "User Name", width: "22%" },
+  { key: "userRole", header: "User Role", width: "20%" },
+  { key: "remarks", header: "Remarks", width: "40%" },
+];
+
+const sortedRows: DecisionHistoryRow[] = [
+  {
+    date: "28 Sept 2026, 01:31:11 pm",
+    userName: "Priya Sharma",
+    userRole: "CVT",
+    remarks: "Applicant details reviewed and forwarded for decision.",
+  },
+];
 
 const CVTApplicantSummary = (props: CVTApplicantSummaryProps) => {
   const [memberIndex, setMemberIndex] = useState(
@@ -473,6 +497,131 @@ const CVTApplicantSummary = (props: CVTApplicantSummaryProps) => {
             </Button>
           </Box>
 
+
+          <Box
+            component="section"
+            aria-label="BRE Discrepancy"
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              minHeight: 46,
+              px: 1.5,
+              py: 0.75,
+              gap: 2,
+              border: "1px solid #E7DDD7",
+              borderRadius: 1.5,
+              backgroundColor: "#FFF",
+              minWidth: 0,
+            }}
+          >
+            {/* Title */}
+            <Typography
+              sx={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#8D232A",
+                whiteSpace: "nowrap",
+                pr: 2,
+                borderRight: "1px solid #E7DDD7",
+              }}
+            >
+              BRE Discrepancy
+            </Typography>
+
+            {/* Initial BRE */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.75,
+                minWidth: 0,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: 11,
+                  color: "#756D69",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Initial
+              </Typography>
+
+              <Box
+                sx={{
+                  px: 1.1,
+                  py: 0.35,
+                  borderRadius: 1,
+                  backgroundColor: "#F4F3F2",
+                  border: "1px solid #DED9D6",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#4E4743",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  ACR#OCD#PAN#ADP#AGE#IDM#KYP
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Divider */}
+            <Box
+              sx={{
+                width: "1px",
+                height: 24,
+                backgroundColor: "#E7DDD7",
+                flexShrink: 0,
+              }}
+            />
+
+            {/* Final BRE */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.75,
+                minWidth: 0,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: 11,
+                  color: "#756D69",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Final
+              </Typography>
+
+              <Box
+                sx={{
+                  px: 1.1,
+                  py: 0.35,
+                  borderRadius: 1,
+                  // backgroundColor: "#EEF8F1",
+                  backgroundColor: "#F4F3F2",
+                  border: "1px solid #B8DCC0",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    // color: "#28743C",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  ACR#OCD#PAN#ADP#AGE#IDM#KYP#NYC
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
           <CustomDialog
             open={breDetailOpen}
             title="BRE Decision"
@@ -486,14 +635,6 @@ const CVTApplicantSummary = (props: CVTApplicantSummaryProps) => {
           >
             <BreDecision readOnly={props.readOnly} />
           </CustomDialog>
-
-          {/* APPLICANT PROFILE */}
-          <CVTApplicantProfile
-            readOnly={props.readOnly}
-            roleType="CVT_TASK"
-            initialMemberIndex={memberIndex}
-            onMemberChange={setMemberIndex}
-          />
 
           {/* =====================================================
               REQUIREMENT MANAGEMENT
@@ -569,6 +710,24 @@ const CVTApplicantSummary = (props: CVTApplicantSummaryProps) => {
               />
             </Box>
           </Box>
+
+
+          {/* APPLICANT PROFILE */}
+          <CVTApplicantProfile
+            readOnly={props.readOnly}
+            roleType="CVT_TASK"
+            initialMemberIndex={memberIndex}
+            onMemberChange={setMemberIndex}
+            memberName="Life Assured 1"
+            />
+
+          <CVTApplicantProfile
+            readOnly={props.readOnly}
+            roleType="CVT_TASK"
+            initialMemberIndex={memberIndex}
+            onMemberChange={setMemberIndex}
+            memberName="Life Assured 2"
+          />
 
           {/* =====================================================
               PIVV DETAILS - READ ONLY ACCORDION
@@ -778,6 +937,12 @@ const CVTApplicantSummary = (props: CVTApplicantSummaryProps) => {
               </Box>
             </AccordionDetails>
           </Accordion>
+
+           <CustomTable<DecisionHistoryRow>
+              title="Decision History"
+              columns={decisionHistoryColumns}
+              data={sortedRows}
+            />
 
            {/* =====================================================
                         CVT DECISION
