@@ -118,6 +118,45 @@
         "dueDate":"2026-09-08",
         "atRiskTime":"2026-09-07"
       }
+    ], "HO_CMO_TASK": [
+      {
+        "id": 1,
+        "taskId": "18763",
+        "instanceId": "1234",
+        "applicationNo": "OB90377722",
+        "sumAssured": 1000000,
+        "premium": 876863872,
+        "product": "I19",
+        "channel": "0TTB",
+        "clientType":"Fresh",
+        "caseType":"Fresh",
+        "priorityFlag":"Y",
+        "roleType": "HO_CMO_TASK",
+        "role": "RETAIL_CUW_USER",
+        "businessType": "RETAIL",
+        "creationDate": "2026-06-30T19:45:29.847589",
+        "dueDate":"2026-09-08",
+        "atRiskTime":"2026-09-07"
+      },
+       {
+        "id": 2,
+        "taskId": "18763",
+        "instanceId": "1234",
+        "applicationNo": "OB90377722",
+        "sumAssured": 1000000,
+        "premium": 876863872,
+        "product": "I19",
+        "channel": "0TTB",
+        "clientType":"Fresh",
+        "caseType":"Fresh",
+        "priorityFlag":"Y",
+        "roleType": "HO_CMO_TASK",
+        "role": "RETAIL_CUW_USER",
+        "businessType": "RETAIL",
+        "creationDate": "2026-06-30T19:45:29.847589",
+        "dueDate":"2026-09-08",
+        "atRiskTime":"2026-09-07"
+      }
     ]
   }
 }

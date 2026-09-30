@@ -89,6 +89,8 @@ interface ApplicantApplicationSummaryProps {
   showHeaderTotals?: boolean;
   productOnlyHeader?: boolean;
   productHeaderDetails?: Array<{ label: string; value: string }>;
+  eligibilityParameters?: Array<{ label: string; value: string }>;
+  groupPolicyDetails?: Array<{ label: string; value: string }>;
   showFaceValue?: boolean;
   afterHeader?: ReactNode;
   uwDecision?: ReactNode;
@@ -946,6 +948,8 @@ interface ApplicationSummaryBannerProps {
   showHeaderTotals?: boolean;
   productOnlyHeader?: boolean;
   productHeaderDetails?: Array<{ label: string; value: string }>;
+  eligibilityParameters?: Array<{ label: string; value: string }>;
+  groupPolicyDetails?: Array<{ label: string; value: string }>;
   showFaceValue?: boolean;
   productName: string;
   policyTerm: string;
@@ -971,6 +975,8 @@ const ApplicationSummaryBanner = ({
   showHeaderTotals = true,
   productOnlyHeader = false,
   productHeaderDetails = [],
+  eligibilityParameters = [],
+  groupPolicyDetails = [],
   showFaceValue = true,
   image,
   name,
@@ -1045,6 +1051,59 @@ const ApplicationSummaryBanner = ({
             `${rider.name} - SA ${rider.sumAssured}`,
           ).join(" / ") : "-"}
         </Typography>
+        {eligibilityParameters.length > 0 && (
+          <Typography
+            sx={{
+              mt: 0.55,
+              fontSize: compactHeader ? { xs: 10.5, sm: 11.5 } : { xs: 11, sm: 12 },
+              lineHeight: 1.6,
+              color: "#000",
+              overflowWrap: "anywhere",
+            }}
+          >
+            <Box component="span" sx={{ fontWeight: 800 }}>
+              {/* Eligibility Parameters: {" "} */}
+              Sum at Risk:  {" "}
+            </Box>
+            {eligibilityParameters.map((parameter, index) => (
+              <Box component="span" key={parameter.label}>
+                {index > 0 && " / "}
+                <Box component="span" sx={{ fontWeight: 800 }}>
+                  {parameter.label}: {" "}
+                </Box>
+                <Box component="span" sx={{ fontWeight: 500 }}>
+                  {parameter.value}
+                </Box>
+              </Box>
+            ))}
+          </Typography>
+        )}
+        {groupPolicyDetails.length > 0 && (
+          <Typography
+            sx={{
+              mt: 0.55,
+              fontSize: compactHeader ? { xs: 10.5, sm: 11.5 } : { xs: 11, sm: 12 },
+              lineHeight: 1.6,
+              color: "#000",
+              overflowWrap: "anywhere",
+            }}
+          >
+            <Box component="span" sx={{ fontWeight: 800 }}>
+              Group Policy Details: {" "}
+            </Box>
+            {groupPolicyDetails.map((detail, index) => (
+              <Box component="span" key={detail.label}>
+                {index > 0 && " / "}
+                <Box component="span" sx={{ fontWeight: 800 }}>
+                  {detail.label}: {" "}
+                </Box>
+                <Box component="span" sx={{ fontWeight: 500 }}>
+                  {detail.value}
+                </Box>
+              </Box>
+            ))}
+          </Typography>
+        )}
       </Box>
     );
   }
@@ -1458,6 +1517,8 @@ const ApplicantApplicationSummary = ({
   showHeaderTotals = true,
   productOnlyHeader = false,
   productHeaderDetails = [],
+  eligibilityParameters = [],
+  groupPolicyDetails = [],
   showFaceValue = true,
   uwDecision,
   quickLinks,
@@ -2664,6 +2725,8 @@ const ApplicantApplicationSummary = ({
                   ]
                 : productHeaderDetails
             }
+            eligibilityParameters={eligibilityParameters}
+            groupPolicyDetails={groupPolicyDetails}
             showFaceValue={showFaceValue}
             onBackToInbox={onBackToInbox}
             image={image}

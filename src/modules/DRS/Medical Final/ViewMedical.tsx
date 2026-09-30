@@ -22,13 +22,13 @@ import { applicantTabs, title } from "../../../utils/constant";
 // import ApplicantProfile from "../DRS_Accordions/ApplicantProfile";
 import MerForm, { type MerFormHandle } from "./MER/MerForm";
 import { getMerConfig } from "./MER/merConfig";
-import 
-// OtherMedicalsForm,
- { type OtherMedicalsFormHandle } from "./Other Medicals/OtherMedicalsForm";
+import OtherMedicalsForm, {
+  type OtherMedicalsFormHandle,
+} from "./Other Medicals/OtherMedicalsForm";
 import { CBC_TABLE_ROWS, getOtherMedicalsConfig, LFT_TABLE_ROWS, LIPIDS_TABLE_ROWS, OGTT_TABLE_ROWS, RUA_TABLE_ROWS, S13_TABLE_ROWS, SMA12_TABLE_ROWS, TFT_TABLE_ROWS } from "./Other Medicals/otherMedicalsConfig";
-import 
-// SpecialMedicalForm,
- { type SpecialMedicalFormHandle } from "./Special Medical/SpecialMedicalForm";
+import SpecialMedicalForm, {
+  type SpecialMedicalFormHandle,
+} from "./Special Medical/SpecialMedicalForm";
 import { getSpecialMedicalConfig } from "./Special Medical/specialMedicalConfig";
 import { saveMerThunk, type MerSaveResponse } from "../../../store/thunks/medicalMerSaveThunk";
 import { buildMerRequest } from "./MER/merPayloadMapper";
@@ -460,6 +460,56 @@ const applicationFormMedicalLifestyleFields = [
   { label: "Smoking", value: "Yes" },
   { label: "Diving", value: "Yes" },
 ];
+
+// View-only TELE-VIDEO MER data mirrors the CUW medical prototype.  It is kept
+// separate from MER because it is received as tele/video assessment data.
+const teleVideoMerSections = [
+  {
+    title: "Tele/Video MER",
+    fields: [
+      ["Application No.", "OS90370641"], ["First Name", "Vihan"], ["Last Name", "Patil"],
+      ["Gender", "Male"], ["Date of Birth", "11-06-1998"], ["Telephonic MER", "No"],
+      ["Time of Tele call", "17-07-2026 04:26 PM"], ["Education", "Post graduate"],
+      ["Occupation", "Salaried"], ["Disclosure", "Material"], ["Adversity", "No Adversity"],
+      ["Annual Income", "2,000,000"], ["Examiner Name", "Mina"], ["Registration ID", "123456"],
+      ["MER Detail", "Video MER"], ["Previous Insurance Declined", "Yes"],
+      ["Medical Treatment", "Yes"], ["Address Including City and State", "ok"],
+      ["Tele Findings", "ok"], ["Tele MER Final Remark", "ok"], ["Tele Type", "TMER"],
+    ],
+  },
+  { title: "Measurements", fields: [["Height (cms)", "165"], ["Height (ft)", "5"], ["Inches", "4.96"], ["Weight (kgs)", "65"], ["BMI", "23.88"]] },
+  { title: "Disposition Details", fields: [["TUW Status", "-"], ["Remark", "OK"], ["Note", "OK"], ["Remarks2", "OK"]] },
+  { title: "STP Details", fields: [["STP Decision", "NonSTP"], ["STP Remarks", "-"]] },
+] as const;
+
+const teleVideoMerQuestions = [
+  ["1", "Is there any physical deformity or disorder?", "Yes"],
+  ["2", "Have you experienced a significant weight change (gain/loss) of 5 kgs or more?", "-"],
+  ["3", "Has the life assured been hospitalized for accident, medical treatment or surgery?", "-"],
+  ["4", "Has the life assured undergone blood, radiological or cardiovascular tests?", "-"],
+  ["5", "Any history of angioplasty, bypass or open-heart surgery?", "-"],
+  ["6", "Any history of heart disease, chest pain, palpitations or breathlessness?", "No"],
+  ["7", "Is the life assured suffering from BP, diabetes, cholesterol or lipid disorder?", "No"],
+  ["8", "Any history of breathlessness, wheezing, cough, asthma, TB or lung disease?", "No"],
+  ["9", "Any evidence or history of cancer, tumour, growth, cyst or lymph-gland disorder?", "-"],
+  ["10", "Any history of hernia or disease of liver, gall bladder, pancreas, stomach or intestine?", "No"],
+  ["11", "Any history of piles, fissure, fistula or ulcerative colitis?", "No"],
+  ["12", "Any history of jaundice or liver disorder?", "No"],
+  ["13", "Any kidney, ureter, bladder, urinary or reproductive-system disorder?", "No"],
+  ["14", "Any history of arthritis, fracture, joint surgery, gout or connective-tissue disorder?", "No"],
+  ["15", "Any issues concerning eyes, ears, nose, mouth or throat?", "No"],
+  ["16", "Any history of fits, seizures, paralysis, fainting, brain or spinal disorder?", "No"],
+  ["17", "Any low haemoglobin, thyroid dysfunction, skin or blood disorder?", "No"],
+  ["18", "Any treatment for stress, anxiety, depression or mental ailment?", "-"],
+  ["19", "Any Covid hospitalisation, complication or ongoing complication?", "-"],
+  ["20", "Any adverse menstrual history or last menstrual period concern?", "-"],
+  ["21", "Any miscarriage, abortion, MTP, gestational hypertension or diabetes history?", "-"],
+  ["22", "Is the life assured currently pregnant?", "-"],
+  ["23", "Any uterus, cervix, ovarian or breast-lump/cyst history?", "Yes"],
+  ["24", "Pap smear, mammogram or pelvis ultrasound: provide date, reason and result.", "-"],
+  ["25", "Is the life assured currently under medication?", "-"],
+  ["26", "Any previous life insurance declined or issued on revised terms?", "No"],
+] as const;
 
 const uniqSectionTitles = (titles: string[]) => {
   const seen = new Set<string>();
@@ -1919,10 +1969,38 @@ const ViewMedical = ({ onBack, backLabel }: ViewMedicalProps) => {
               overflowX: "hidden",
               overflowY: { md: "auto" },
               scrollbarGutter: "stable",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
+            {isCuwTask && (
+              <Box sx={{ order: 0 }}>
+                <Box sx={{ px: 1.5, py: 0.9, color: "#344054", backgroundColor: "#EEF2F6", borderBottom: "1px solid #E4E7EC" }}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.35 }}>Overview</Typography>
+                </Box>
+                {[
+                  ["overview-lifestyle", "Application Form Medical & Lifestyle Details"],
+                  ["overview-decision", "Decision"],
+                ].map(([id, label]) => (
+                  <Box key={id} role="button" tabIndex={0} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })} sx={{ px: 1.5, py: 0.85, borderBottom: "1px solid #EAECEF", color: "#667085", fontSize: 11.5, cursor: "pointer", display: "flex", justifyContent: "space-between", gap: 1 }}>
+                    <Typography sx={{ fontSize: "inherit", lineHeight: 1.2 }}>{label}</Typography><Typography sx={{ fontSize: 14 }}>{"\u203A"}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            )}
+            {isCuwTask && (
+              <Box sx={{ order: 2 }}>
+                <Box sx={{ px: 1.5, py: 0.9, color: "#344054", backgroundColor: "#EEF2F6", borderBottom: "1px solid #E4E7EC" }}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.35 }}>TELE-VIDEO MER</Typography>
+                </Box>
+                {[...teleVideoMerSections.map((section) => section.title), "Family History", "Habit and Addiction", "Question Table"].map((label) => {
+                  const id = `tele-video-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+                  return <Box key={id} role="button" tabIndex={0} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })} sx={{ px: 1.5, py: 0.85, borderBottom: "1px solid #EAECEF", color: "#667085", fontSize: 11.5, cursor: "pointer", display: "flex", justifyContent: "space-between", gap: 1 }}><Typography sx={{ fontSize: "inherit", lineHeight: 1.2 }}>{label}</Typography><Typography sx={{ fontSize: 14 }}>{"\u203A"}</Typography></Box>;
+                })}
+              </Box>
+            )}
             {medicalSectionGroups.map((group) => (
-              <Box key={group.key}>
+              <Box key={group.key} sx={{ order: group.key === "mer" ? 1 : group.key === "specialMedical" ? 3 : 4 }}>
                 <Box
                   role="button"
                   tabIndex={0}
@@ -2010,7 +2088,9 @@ const ViewMedical = ({ onBack, backLabel }: ViewMedicalProps) => {
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
               {isCuwTask && (
                 <Box
+                  id="overview-lifestyle"
                   sx={{
+                    order: 0,
                     border: "1px solid #E4E7EC",
                     borderRadius: 1.5,
                     backgroundColor: "#FFFFFF",
@@ -2094,7 +2174,9 @@ const ViewMedical = ({ onBack, backLabel }: ViewMedicalProps) => {
 
               {isCuwTask && (
                 <Box
+                  id="overview-decision"
                   sx={{
+                    order: 5,
                     border: "1px solid #E4E7EC",
                     borderRadius: 1.5,
                     backgroundColor: "#FFFFFF",
@@ -2157,6 +2239,36 @@ const ViewMedical = ({ onBack, backLabel }: ViewMedicalProps) => {
                   </Box>
               )}
 
+              {isCuwTask && (
+                <>
+                  {teleVideoMerSections.map((section) => (
+                    <Box key={section.title} id={`tele-video-${section.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`} sx={{ order: 2, border: "1px solid #E4E7EC", borderRadius: 1.5, backgroundColor: "#FFFFFF", boxShadow: "0 1px 2px rgba(16,24,40,0.08)", overflow: "hidden" }}>
+                      <Box sx={{ px: { xs: 1.5, md: 2 }, py: 0.9, borderBottom: "1px solid #E4E7EC", backgroundColor: "#F8FAFC" }}><Typography sx={{ fontSize: 12, fontWeight: 700, color: "#1F2937" }}>{section.title}</Typography></Box>
+                      <Box sx={{ p: { xs: 1.25, md: 1.5 }, display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 1.25 }}>
+                        {section.fields.map(([label, value]) => <Box key={label}><Typography sx={{ mb: 0.5, fontSize: 12, color: "#475467" }}>{label}</Typography><CustomTextField fullWidth size="small" value={value} disabled /></Box>)}
+                      </Box>
+                    </Box>
+                  ))}
+
+                  <Box id="tele-video-family-history" sx={{ order: 2, border: "1px solid #E4E7EC", borderRadius: 1.5, backgroundColor: "#FFFFFF", boxShadow: "0 1px 2px rgba(16,24,40,0.08)", overflow: "hidden" }}>
+                    <Box sx={{ px: { xs: 1.5, md: 2 }, py: 0.9, borderBottom: "1px solid #E4E7EC", backgroundColor: "#F8FAFC" }}><Typography sx={{ fontSize: 12, fontWeight: 700 }}>Family History</Typography></Box>
+                    <Box sx={{ p: 1.5, display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(4, minmax(0, 1fr))" }, gap: 1.25 }}>
+                      {[ ["Relation", "Father"], ["Age", "55"], ["Health Status", "Good"], ["Dead or Alive", "Alive"], ["Relation", "Mother"], ["Age", "51"], ["Health Status", "Good"], ["Dead or Alive", "Alive"] ].map(([label, value], index) => <Box key={`${label}-${index}`}><Typography sx={{ mb: 0.5, fontSize: 12, color: "#475467" }}>{label}</Typography><CustomTextField fullWidth size="small" value={value} disabled /></Box>)}
+                    </Box>
+                  </Box>
+
+                  <Box id="tele-video-habit-and-addiction" sx={{ order: 2, border: "1px solid #E4E7EC", borderRadius: 1.5, backgroundColor: "#FFFFFF", boxShadow: "0 1px 2px rgba(16,24,40,0.08)", overflow: "hidden" }}>
+                    <Box sx={{ px: { xs: 1.5, md: 2 }, py: 0.9, borderBottom: "1px solid #E4E7EC", backgroundColor: "#F8FAFC" }}><Typography sx={{ fontSize: 12, fontWeight: 700 }}>Habit and Addiction</Typography></Box>
+                    <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { p: 1, borderBottom: "1px solid #EAECF0", textAlign: "left", fontSize: 12 }, "& th": { bgcolor: "#FFF4EC", color: "#A92129", fontWeight: 700 } }}><thead><tr><th>Habit</th><th>Indicator</th><th>Quantity</th><th>No. of Year</th></tr></thead><tbody>{[["Cigarette/beedis/cigar", "Yes", "2", "10"], ["Gutka/Snuff/Paan etc.", "No", "-", "-"], ["Narcotic Consumption", "No", "-", "-"], ["Beer/Wine/Hard liquor", "Yes", "4", "12"]].map((row) => <tr key={row[0]}>{row.map((value) => <td key={value}>{value}</td>)}</tr>)}</tbody></Box>
+                  </Box>
+
+                  <Box id="tele-video-question-table" sx={{ order: 2, border: "1px solid #E4E7EC", borderRadius: 1.5, backgroundColor: "#FFFFFF", boxShadow: "0 1px 2px rgba(16,24,40,0.08)", overflow: "hidden" }}>
+                    <Box sx={{ px: { xs: 1.5, md: 2 }, py: 0.9, borderBottom: "1px solid #E4E7EC", backgroundColor: "#F8FAFC" }}><Typography sx={{ fontSize: 12, fontWeight: 700 }}>Question Table</Typography></Box>
+                    <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { p: 1, borderBottom: "1px solid #EAECF0", textAlign: "left", verticalAlign: "top", fontSize: 12 }, "& th": { bgcolor: "#FFF4EC", color: "#A92129", fontWeight: 700 } }}><thead><tr><th>Question Id</th><th>Question</th><th>Response</th><th>Remarks</th></tr></thead><tbody>{teleVideoMerQuestions.map(([id, question, response]) => <tr key={id}><td>{id}</td><td>{question}</td><td>{response}</td><td>{response === "Yes" ? "Required" : "-"}</td></tr>)}</tbody></Box>
+                  </Box>
+                </>
+              )}
+
               {flattenedSubSections.map((subSection) => {
                 const group = medicalSectionGroups.find((medicalGroup) => medicalGroup.label === subSection.groupLabel);
                 const isSubSectionExpanded = !collapsedSubSections.has(subSection.id);
@@ -2169,6 +2281,7 @@ const ViewMedical = ({ onBack, backLabel }: ViewMedicalProps) => {
                       sectionRefs.current[subSection.id] = node as HTMLDivElement | null;
                     }}
                     sx={{
+                      order: group?.key === "mer" ? 1 : group?.key === "specialMedical" ? 3 : 4,
                       scrollMarginTop: "160px",
                       border: "1px solid #E4E7EC",
                       borderRadius: 1.5,
@@ -2303,7 +2416,7 @@ const ViewMedical = ({ onBack, backLabel }: ViewMedicalProps) => {
                           }
                         />
                       )}
-                      {/* {group?.key === "specialMedical" && (
+                      {group?.key === "specialMedical" && (
                         <SpecialMedicalForm
                           ref={(node) => {
                             specialMedicalFormRefs.current[subSection.id] = node;
@@ -2322,7 +2435,7 @@ const ViewMedical = ({ onBack, backLabel }: ViewMedicalProps) => {
                           fields={group.fields}
                           isEditing={editingSubSectionId === subSection.id}
                         />
-                      )} */}
+                      )}
                     </Box>
                     </Collapse>
                   </Box>

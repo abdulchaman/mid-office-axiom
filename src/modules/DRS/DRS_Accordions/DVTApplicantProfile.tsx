@@ -16,8 +16,6 @@ import KeyValueTable from "../../../components/ui/KeyValueTable/KeyValueTable";
 import { drsThunk } from "../../../store/thunks/drsThunk";
 import { useParams } from "react-router-dom";
 import CustomButton from "../../../components/ui/Button/Button";
-import ViewMedical from "../Medical Final/ViewMedical";
-import ViewFinancial from "../Financial/ViewFinancial";
 //import RiskAnalytics from "./RiskAnalytics";
 import { markApplicantTabVisited } from "../../../validations/drsApplicantTabValidation";
 import { formatDate } from "../../../utils/dataFormat";
@@ -38,6 +36,7 @@ interface ApplicantProfileProps {
   roleType?: string;
   initialMemberIndex?: number;
   onMemberChange?: (memberIndex: number) => void;
+  onDetailViewChange?: (isOpen: boolean) => void;
 }
 
 interface AgeDetails {
@@ -93,6 +92,12 @@ interface KycDetails {
   criminalProceedings?: string;
 }
 
+interface AmlComplianceDetails {
+  cityOfResident?: string;
+  stateOfResident?: string;
+  criminalQuestion?: string;
+}
+
 interface AddressDetails {
   type?: string;
   addressLine1?: string;
@@ -103,6 +108,7 @@ interface AddressDetails {
   state?: string;
   pinCode?: string;
   residingCountry?: string;
+ 
 }
 
 interface ContactDetails {
@@ -114,6 +120,7 @@ interface ContactDetails {
   emailId?: string;
   emailPref?: string;
   smsPref?: string;
+   negativePincode?:string;
 }
 
 interface PaymentDetails {
@@ -151,6 +158,13 @@ interface GenericDetails {
   typeOfProposal?: string;
 }
 
+interface ProductDetails {
+  productCode?: string;
+  productType?: string;
+  fundSource?: string;
+  partnerType?: string;
+}
+
 type NomineeTableRow = Pick<
   NomineeRow,
   | "nomineeName"
@@ -158,6 +172,9 @@ type NomineeTableRow = Pick<
   | "gender"
   | "relationship"
   | "sharePercentage"
+  | "isLASame"
+  | "relationShipWithJL"
+  | "laFlag"
 >;
 
 type AppointeeTableRow = Pick<
@@ -186,12 +203,25 @@ const nomineeColumns: Column<NomineeTableRow>[] = [
   },
   {
     key: "relationship",
-    header: "Relationship",
+    header: "Relationship with LA",
     width: "12%",
   },
   {
     key: "sharePercentage",
     header: "Share %",
+    width: "10%",
+  },
+   {
+    key: "isLASame",
+    header: "is Life Same As Nominee",
+    width: "10%",
+  }, {
+    key: "relationShipWithJL",
+    header: "Relationship With Joint Life",
+    width: "10%",
+  }, {
+    key: "laFlag",
+    header: "Life Assured Flag",
     width: "10%",
   },
 ];
@@ -226,8 +256,9 @@ interface SummaryNominee {
   gender?: string;
   proposerNomineeRelation?: string;
   percentage?: number | string;
-  accountNumber?:number | string;
-  ifsc?:number | string;
+  isLASame?: string | boolean;
+  relationShipWithJL?: string;
+  laFlag?: string | boolean;
 }
 
 interface SummaryAppointee {
@@ -345,11 +376,13 @@ interface SummaryMember {
   proposerSummary?: PersonalSummary;
   applicantDetails?: ApplicantDetails;
   kycDetails?: KycDetails;
+  amlComplianceDetails?: AmlComplianceDetails;
   address?: AddressDetails[];
   contactDetails?: ContactDetails;
   paymentDetails?: PaymentDetails;
   payoutDetails?: PayoutDetails;
   genericDetails?: GenericDetails;
+  productDetails?: ProductDetails;
   eiaDetails?: EiaDetails;
   nominee?: SummaryNominee[];
   appointee?: SummaryAppointee[];
@@ -380,6 +413,7 @@ const applicantTabConfig: Record<string, string[]> = {
     "Personal & KYC",
     "Contact & Address",
     "Payment & Payout",
+    "Product Details",
     "Nominee"
   ],
 
@@ -388,6 +422,7 @@ const applicantTabConfig: Record<string, string[]> = {
     "Personal & KYC",
     "Contact & Address",
     "Payment & Payout",
+    "Product Details",
      "Nominee"
   ],
 
@@ -399,6 +434,7 @@ const applicantTabConfig: Record<string, string[]> = {
     "Contact & Address",
     "Financial & Profession",
     "Medical & Lifestyle",
+    "Product Details",
     "Nominee",
     "Generic",
     "eIA",
@@ -409,6 +445,7 @@ const applicantTabConfig: Record<string, string[]> = {
     "Image Details",
     "Personal & KYC",
     "Contact & Address",
+    "Product Details",
     "Nominee",
     "Generic",
     "eIA",
@@ -421,6 +458,7 @@ const applicantTabConfig: Record<string, string[]> = {
     "Contact & Address",
     "Financial & Profession",
     "Medical & Lifestyle",
+    "Product Details",
     "Nominee",
     "Generic",
     "eIA",
@@ -544,11 +582,13 @@ const DetailsCard = ({
   fields,
   orangeHeader = false,
   compact = false,
+  columns,
 }: {
   title: string;
   fields: { label: string; value: unknown }[];
   orangeHeader?: boolean;
   compact?: boolean;
+  columns?: number;
 }) => (
   <Box
     sx={{
@@ -576,7 +616,11 @@ const DetailsCard = ({
       sx={{
         p: orangeHeader ? (compact ? 0.75 : 2) : 0,
         display: "grid",
-        gridTemplateColumns: compact ? { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" } : "repeat(3, minmax(0, 1fr))",
+        gridTemplateColumns: columns
+          ? { xs: "1fr", md: `repeat(${columns}, minmax(0, 1fr))` }
+          : compact
+            ? { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }
+            : "repeat(3, minmax(0, 1fr))",
         columnGap: compact ? 1 : 2,
         rowGap: compact ? 0.75 : 2,
       }}
@@ -593,11 +637,15 @@ const DetailsCard = ({
 /*                            MAIN COMPONENT                                  */
 /* -------------------------------------------------------------------------- */
 
+const MEDICAL_VIEW_URL = "/dvt-mr-view-medical.html";
+const FINANCIAL_VIEW_URL = "/dvt-nmr-view-financial.html";
+
 const DVTApplicantProfile = ({
   readOnly = false,
   roleType: roleTypeOverride = "DVT_TASK",
   initialMemberIndex = 0,
   onMemberChange,
+  onDetailViewChange,
 }: ApplicantProfileProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const {
@@ -618,6 +666,24 @@ const DVTApplicantProfile = ({
   const [activeDetailView, setActiveDetailView] = useState<
     "medical" | "financial" | null
   >(null);
+
+  useEffect(() => {
+    onDetailViewChange?.(activeDetailView !== null);
+  }, [activeDetailView, onDetailViewChange]);
+
+  useEffect(() => {
+    const handleMedicalViewMessage = (event: MessageEvent) => {
+      if (
+        event.data === "close-medical-view" ||
+        event.data === "close-financial-view"
+      ) {
+        setActiveDetailView(null);
+      }
+    };
+
+    window.addEventListener("message", handleMedicalViewMessage);
+    return () => window.removeEventListener("message", handleMedicalViewMessage);
+  }, []);
  
   /*
    * summary contains objects such as:
@@ -810,6 +876,7 @@ const DVTApplicantProfile = ({
         const personal = selectedApplicant.proposerSummary ?? {};
         // const applicant = selectedApplicant.applicantDetails ?? {};
         const kyc = selectedApplicant.kycDetails ?? {};
+        const amlCompliance = selectedApplicant.amlComplianceDetails ?? {};
         const applicantName = [
           personal.firstName,
           personal.middleName,
@@ -854,11 +921,11 @@ const DVTApplicantProfile = ({
           },
           { label: "Designation", value: personal.designation },
           { label: "Disabled", value: personal.disabled },
-          {
-            label: "Percentage Of Impairment",
-            value: personal.percentageOfImpairment,
-          },
-          { label: "Type Of Impairment", value: personal.typeOfImpairment },
+          // {
+          //   label: "Percentage Of Impairment",
+          //   value: personal.percentageOfImpairment,
+          // },
+          // { label: "Type Of Impairment", value: personal.typeOfImpairment },
           { label: "UDID Number", value: personal.udidNumber },
           { label: "UDS Link", value: personal.udsLink },
         ];
@@ -897,6 +964,21 @@ const DVTApplicantProfile = ({
           { label: "Criminal Proceedings", value: kyc.criminalProceedings },
         ];
 
+        const amlComplianceFields = [
+          {
+            label: "City of Resident",
+            value: amlCompliance.cityOfResident,
+          },
+          {
+            label: "State of Resident",
+            value: amlCompliance.stateOfResident,
+          },
+          {
+            label: "Criminal Question",
+            value: amlCompliance.criminalQuestion,
+          },
+        ];
+
         return (
           <Box
             sx={{
@@ -929,6 +1011,24 @@ const DVTApplicantProfile = ({
             ) : (
               <GridSection columns={8} items={kycFields} />
             )}
+
+            <Box sx={{ borderTop: "1px solid #AFAFAF", my: isDvtTaskRole ? 1 : 2 }} />
+
+            <Typography
+              sx={{
+                mb: isDvtTaskRole ? 0.75 : 1.25,
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "#161616",
+              }}
+            >
+              AML & Compliance
+            </Typography>
+            {isDvtTaskRole ? (
+              <CompactProfileFields items={amlComplianceFields} />
+            ) : (
+              <GridSection columns={8} items={amlComplianceFields} />
+            )}
           </Box>
         );
       }
@@ -951,7 +1051,7 @@ const DVTApplicantProfile = ({
           { label: "City", value: address?.city },
           { label: "State", value: address?.state },
           { label: "Country", value: address?.residingCountry },
-          { label: "Pincode", value: address?.pinCode },
+          { label: "Pincode", value: address?.pinCode }
         ];
 
         const contactFields = [
@@ -962,6 +1062,7 @@ const DVTApplicantProfile = ({
           { label: "Landline Number", value: contact.landlineNo },
           { label: "Email Pref", value: contact.emailPref },
           { label: "SMS Pref", value: contact.smsPref },
+          { label: "Negative Pincode", value: contact?.negativePincode }
         ];
 
         return (
@@ -1441,6 +1542,64 @@ const DVTApplicantProfile = ({
         );
       }
 
+      case "Product Details": {
+        const asRecord = (value: unknown): Record<string, unknown> =>
+          value && typeof value === "object" && !Array.isArray(value)
+            ? (value as Record<string, unknown>)
+            : {};
+        const applicationOverview = asRecord(sourceRecord.applicationOverview);
+        const overviewProductDetails = Array.isArray(applicationOverview.productDetail)
+          ? asRecord(applicationOverview.productDetail[0])
+          : asRecord(applicationOverview.productDetail);
+        const applicantProductDetails = asRecord(selectedApplicant.productDetails);
+        const productSources = [
+          applicantProductDetails,
+          overviewProductDetails,
+          applicationOverview,
+          sourceRecord,
+        ];
+        const valueFor = (...keys: string[]) => {
+          for (const source of productSources) {
+            for (const key of keys) {
+              const value = source[key];
+              if (value !== null && value !== undefined && value !== "") {
+                return value;
+              }
+            }
+          }
+          return "-";
+        };
+
+        const productFields = [
+          {
+            label: "Product Code",
+            value: valueFor("productCode", "productcode", "code"),
+          },
+          {
+            label: "Product Type",
+            value: valueFor("productType", "producttype"),
+          },
+          {
+            label: "Fund Source",
+            value: valueFor("fundSource", "fundsource"),
+          },
+          {
+            label: "Partner Type",
+            value: valueFor("partnerType", "partnertype"),
+          },
+        ];
+
+        return (
+          <DetailsCard
+            compact={isDvtTaskRole}
+            orangeHeader
+            title="Product Details"
+            fields={productFields}
+            columns={4}
+          />
+        );
+      }
+
       case "Nominee": {
         const fallbackNominees: SummaryNominee[] = Array.isArray(
           selectedApplicant.nominee,
@@ -1470,9 +1629,10 @@ const DVTApplicantProfile = ({
             relationship: toDisplayValue(
               item.proposerNomineeRelation,
             ),
-            accountNumber: toDisplayValue(item.accountNumber),
-            ifsc: toDisplayValue(item.ifsc),
             sharePercentage: Number(item.percentage ?? 0),
+            isLASame: toDisplayValue(item.isLASame),
+            relationShipWithJL: toDisplayValue(item.relationShipWithJL),
+            laFlag: toDisplayValue(item.laFlag),
           }));
 
         const mappedFallbackAppointees: AppointeeTableRow[] =
@@ -1821,10 +1981,17 @@ const DVTApplicantProfile = ({
 
   if (activeDetailView === "medical") {
     return (
-      <Box sx={{ width: "100%", minWidth: 0, px: 0.5 }}>
-        <ViewMedical
-          onBack={() => setActiveDetailView(null)}
-          backLabel="Back to DRS"
+      <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
+        <Box
+          component="iframe"
+          title="Medical prototype"
+          src={MEDICAL_VIEW_URL}
+          sx={{
+            display: "block",
+            width: "100%",
+            height: "100vh",
+            border: 0,
+          }}
         />
       </Box>
     );
@@ -1832,11 +1999,17 @@ const DVTApplicantProfile = ({
 
   if (activeDetailView === "financial") {
     return (
-      <Box sx={{ width: "100%", minWidth: 0, px: 0.5 }}>
-        <ViewFinancial
-          onBack={() => setActiveDetailView(null)}
-          backLabel="Back to DRS"
-          onViewMedical={() => setActiveDetailView("medical")}
+      <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
+        <Box
+          component="iframe"
+          title="Financial prototype"
+          src={FINANCIAL_VIEW_URL}
+          sx={{
+            display: "block",
+            width: "100%",
+            height: "100vh",
+            border: 0,
+          }}
         />
       </Box>
     );

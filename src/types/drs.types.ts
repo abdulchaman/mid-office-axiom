@@ -1030,6 +1030,9 @@ export interface Nominee {
   accountNumber: string;
   ifsc: string;
   sharePercentage: number;
+  isLASame?:string;
+  relationShipWithJL?:string;
+  laFlag?:string;
   appointeeName: string;
   appointeeGender: string;
   appointeeDOB: string;
