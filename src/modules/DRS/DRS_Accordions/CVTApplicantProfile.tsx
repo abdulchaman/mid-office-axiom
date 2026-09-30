@@ -38,6 +38,7 @@ interface ApplicantProfileProps {
   roleType?: string;
   initialMemberIndex?: number;
   onMemberChange?: (memberIndex: number) => void;
+  memberName?: string;
 }
 
 interface AgeDetails {
@@ -590,7 +591,8 @@ const CVTApplicantProfile = ({
   readOnly = false,
   roleType: roleTypeOverride = "CVT_TASK",
   initialMemberIndex = 0,
-  onMemberChange,
+  // onMemberChange,
+  memberName,
 }: ApplicantProfileProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const {
@@ -842,7 +844,7 @@ const CVTApplicantProfile = ({
             label: "Resident Status",
             value: personal.residentStatus,
           },
-          { label: "Designation", value: personal.designation },
+          // { label: "Designation", value: personal.designation },
           { label: "Disabled", value: personal.disabled },
           {
             label: "Percentage Of Impairment",
@@ -872,17 +874,17 @@ const CVTApplicantProfile = ({
             value: kyc.panAadharSeedingStatus,
           },
           { label: "Identity Proof Type", value: kyc.identityProofType },
-          {
-            label: "Identity Proof Expiry Date",
-            value: formatDate(kyc.identityProofExpiryDate,false),
-          },
+          // {
+          //   label: "Identity Proof Expiry Date",
+          //   value: formatDate(kyc.identityProofExpiryDate,false),
+          // },
           {
             label: "Identity Proof Number",
             value: maskLastFour(kyc.identityProofNumber),
           },
           { label: "Address Proof", value: kyc.addressProof },
-          { label: "Income Proof", value: kyc.incomeProof },
-          { label: "CKYC Number", value: kyc.existingCkycNumber },
+          // { label: "Income Proof", value: kyc.incomeProof },
+          // { label: "CKYC Number", value: kyc.existingCkycNumber },
           { label: "PEP", value: kyc.pep },
           { label: "Criminal Proceedings", value: kyc.criminalProceedings },
         ];
@@ -1866,14 +1868,15 @@ const CVTApplicantProfile = ({
                   ) : (selectedApplicant.memberType?.charAt(0)?.toUpperCase() || "A")}
                 </Box>
                 <Typography sx={{ color: "#A92129", fontSize: 11, fontWeight: 700, textAlign: "center" }}>
-                  {formatMemberType(selectedApplicant.memberType, summary.length)}
+                  {/* {formatMemberType(selectedApplicant.memberType, summary.length)} */}
+                  {memberName}
                 </Typography>
               </Box>
               <Box sx={{ minWidth: 0 }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1,
                 px: 1.25, py: 0.75, bgcolor: "#FFF2E7", borderBottom: "1px solid #F1D8C8",
                 flexWrap: "nowrap" }}>
-                <Select size="small" value={selectedMemberTab}
+                {/* <Select size="small" value={selectedMemberTab}
                   inputProps={{ "aria-label": "Select applicant" }}
                   onChange={(event) => {
                     const index = Number(event.target.value);
@@ -1889,7 +1892,7 @@ const CVTApplicantProfile = ({
                       {formatMemberType(member.memberType, summary.length)}
                     </MenuItem>
                   ))}
-                </Select>
+                </Select> */}
                 <Tabs value={safeDetailTab} onChange={handleDetailTabChange}
                   aria-label="Applicant profile details" variant="scrollable" scrollButtons="auto"
                   sx={{ flex: "1 1 0", minWidth: 0, minHeight: 32,

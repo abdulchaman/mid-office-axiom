@@ -27,6 +27,7 @@ import { useEffect, useState, type InputHTMLAttributes } from "react";
 
 
 import { useDispatch, useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
 
 
 
@@ -60,6 +61,8 @@ import { useParams } from "react-router-dom";
 
 
 import CustomSnackbar from "../../../components/ui/SnackBar/Snackbar";
+import type { Column } from "../../../components/ui/Table/Table";
+import CustomTable from "../../../components/ui/Table/Table";
 
 
 
@@ -103,7 +106,6 @@ type EditableMember = {
 
   memberType?: string;
 
-
   proposerSummary?: {
 
 
@@ -117,7 +119,6 @@ type EditableMember = {
 
 
   };
-
 
   kycDetails?: {
 
@@ -165,7 +166,6 @@ type EditableMember = {
 
 
   };
-
 
   address?: Address[];
 
@@ -1851,7 +1851,6 @@ const EditApplicantProfile = ({
 
     void loadProfile();
 
-
     return () => {
 
 
@@ -2521,7 +2520,6 @@ const createUpdatedMember = (
 
 
         },
-
 
         isAccuity: true,
 
