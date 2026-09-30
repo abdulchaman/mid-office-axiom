@@ -11,6 +11,7 @@ import {
 // import CustomAccordion from "../../components/ui/Accordion/Accordion";
 import CustomDialog from "../../components/ui/Dialog/Dialog";
 import CustomButton from "../../components/ui/Button/Button";
+import CustomTable, { type Column } from "../../components/ui/Table/Table";
 import { KeyRightArrowIcon, UserProfileIcon } from "../../icons/Icons";
 import { useAppSelector } from "../../store/hooks";
 import type { RootState } from "../../store/store";
@@ -70,6 +71,134 @@ interface CaseSnapshotRowProps {
 }
 
 type UnknownRecord = Record<string, unknown>;
+
+interface ClaimAuditRow {
+  action: string;
+  policyNumber: string;
+  productCode: string;
+  claimKey: string;
+  canonicalId: string;
+  patientName: string;
+  ailmentForCommunication: string;
+  claimType: string;
+  subtype: string;
+  intimationDate: string;
+  doa: string;
+  dod: string;
+  decisionStatus: string;
+}
+
+// Claim Audit showcase data is kept aligned with drs-screen-prototype.html.
+const CLAIM_AUDIT_ROWS: ClaimAuditRow[] = [
+  {
+    action: "Validate",
+    policyNumber: "POL-2026-001845",
+    productCode: "IPRU123",
+    claimKey: "CLM-000783",
+    canonicalId: "CAN-874152",
+    patientName: "Rohan Mehta",
+    ailmentForCommunication: "Acute Myocardial Infarction",
+    claimType: "Death",
+    subtype: "Natural",
+    intimationDate: "18/08/2026",
+    doa: "20/08/2026",
+    dod: "22/08/2026",
+    decisionStatus: "Approved",
+  },
+  {
+    action: "Validate",
+    policyNumber: "POL-2026-002196",
+    productCode: "IPRU456",
+    claimKey: "CLM-000921",
+    canonicalId: "CAN-874338",
+    patientName: "Nisha Kapoor",
+    ailmentForCommunication: "Chronic Kidney Disease",
+    claimType: "Critical Illness",
+    subtype: "Medical",
+    intimationDate: "02/09/2026",
+    doa: "04/09/2026",
+    dod: "-",
+    decisionStatus: "Under Review",
+  },
+  {
+    action: "Validate",
+    policyNumber: "POL-2026-002418",
+    productCode: "IPRU789",
+    claimKey: "CLM-001038",
+    canonicalId: "CAN-874519",
+    patientName: "Amit Verma",
+    ailmentForCommunication: "Road Traffic Accident",
+    claimType: "Accidental",
+    subtype: "Hospitalization",
+    intimationDate: "12/09/2026",
+    doa: "12/09/2026",
+    dod: "-",
+    decisionStatus: "Approved",
+  },
+];
+
+const CLAIM_AUDIT_COLUMNS: Column<ClaimAuditRow>[] = [
+  {
+    key: "action",
+    header: "",
+    width: "84px",
+    render: () => (
+      <CustomButton
+        type="button"
+        variant="outlined"
+        sx={{ minWidth: 68, px: 1, py: 0.35, borderRadius: "16px", fontSize: "10px" }}
+      >
+        Validate
+      </CustomButton>
+    ),
+  },
+  { key: "policyNumber", header: "Policy Number", width: "130px" },
+  { key: "productCode", header: "Product Code", width: "100px" },
+  { key: "claimKey", header: "Claim Key", width: "110px" },
+  { key: "canonicalId", header: "Canonical ID", width: "110px" },
+  { key: "patientName", header: "Patient Name", width: "120px" },
+  { key: "ailmentForCommunication", header: "Ailment for Communication", width: "190px" },
+  { key: "claimType", header: "Claim Type", width: "115px" },
+  { key: "subtype", header: "Subtype", width: "110px" },
+  { key: "intimationDate", header: "Intimation Date", width: "110px" },
+  { key: "doa", header: "DOA", width: "100px" },
+  { key: "dod", header: "DOD", width: "100px" },
+  {
+    key: "decisionStatus",
+    header: "Decision Status",
+    width: "120px",
+    render: (value) => (
+      <Box
+        component="span"
+        sx={{
+          display: "inline-block",
+          px: 1,
+          py: 0.35,
+          borderRadius: "12px",
+          bgcolor: value === "Approved" ? "#EEF8F1" : "#FFF3E8",
+          color: value === "Approved" ? "#28743C" : "#B54A00",
+          fontSize: "10px",
+          fontWeight: 800,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {String(value)}
+      </Box>
+    ),
+  },
+];
+
+const ClaimAuditTable = () => (
+  <Box sx={{ mb: 1, width: "100%", overflowX: "auto" }}>
+    <Box sx={{ minWidth: 1499 }}>
+      <CustomTable<ClaimAuditRow>
+        title="Claim Audit"
+        columns={CLAIM_AUDIT_COLUMNS}
+        data={CLAIM_AUDIT_ROWS}
+      />
+    </Box>
+  </Box>
+);
 
 type RiskStatus = "clear" | "attention" | "unavailable";
 
@@ -2292,6 +2421,9 @@ const HOCMOApplicationSummary = ({
           </Box>
         ) : (
           <Box sx={{ mb: 1 }}>
+            {/* Claim Audit must remain immediately before the HO CMO decision table. */}
+            <ClaimAuditTable />
+
             <HOCMOMedicalDecisionTable
               rows={hoCmoDecisionRows}
               onRowsChange={setHOCMODecisionRows}

@@ -50,6 +50,8 @@ import { DRS_LAYOUTS } from "../drs-layouts";
 import { requirementMastersThunk } from "../../../store/thunks/requirementMastersThunk";
 
 const DRS_LAYOUT_BY_ROLE = {
+  // HO_CMO_TASK is the inbox role name for the existing retail CMO workflow.
+  HO_CMO_TASK: "RETAIL_CMO_POOL",
   CMO_TASK: "RETAIL_CMO_POOL",
   CUW_TASK: "RETAIL_CUW_POOL",
   CVT_TASK: "CVT_TASK",

@@ -871,6 +871,7 @@ import GroupFormalGuwDrs from "./Group/Formal/GroupFormalGuwDrs";
 import GroupFormalSrUwDrs from "./Group/Formal/GroupFormalSrUwDrs";
 import GroupFormalHoD from "./Group/Formal/GroupFormalHoD";
 import GroupFormalClaimAuditTask from "./Group/Formal/GroupFormalClaimAuditTask";
+import { isRetailHOCMOTask } from "./drsRoleRouting";
 
 
 interface ApplicationRow {
@@ -904,6 +905,8 @@ interface SnackbarState {
 }
 
 const mapper = {
+  // Inbox sends HO_CMO_TASK; it must use the same retail HO CMO layout as CMO_TASK.
+  HO_CMO_TASK: "RETAIL_CMO_POOL",
   CMO_TASK: "RETAIL_CMO_POOL",
   REF_CMO_TASK: "REF_CMO_TASK",
   CUW_TASK: "RETAIL_CUW_POOL",
@@ -1758,7 +1761,7 @@ const DRS = () => {
               />
             ) :
 
-              normalizeValue(roleType) === "CMO_TASK" ? (
+              isRetailHOCMOTask(roleType) ? (
                 <HOCMOApplicationSummary
                   stickyTop={0}
                   onBackToInbox={() => navigate(getInboxPath())}

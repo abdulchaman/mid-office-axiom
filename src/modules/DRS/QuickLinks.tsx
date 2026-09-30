@@ -14,6 +14,7 @@ import {
     getSearchApplicationPath,
     normalizeBusinessType,
 } from "../../routes/routes";
+import { isRetailHOCMOTask } from "./drsRoleRouting";
 import { useAppContext } from "../../hooks/useAppContext";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { completeTaskThunk } from "../../store/thunks/completeTaskThunk";
@@ -296,6 +297,8 @@ const QuickLinks = ({
         selectedCaseContext.roleType ??
         localStorage.getItem("roleType") ??
         "";
+    // Treat the inbox HO_CMO_TASK alias exactly like the existing CMO_TASK UI.
+    const isRetailHOCMORole = isRetailHOCMOTask(roleType);
     const referToItDecisionCode = getMiscCode(
         getMiscMasters(masterData).find(
             (master) => getMiscType(master) === "REF_IT",
@@ -381,7 +384,7 @@ const QuickLinks = ({
                     : undefined,
             },
         
-        ...(roleType !== "CVT_TASK" && roleType !== "DVT_TASK" && roleType !== "GROUP_CMO_TASK" && roleType !== "CMO_TASK" && roleType !== "REF_CMO_TASK" && roleType !== 'PIVV_TASK' && roleType !== "GROUP_VENDOR_CMO_TASK" && roleType !== "MAS_TASK" ? [
+        ...(roleType !== "CVT_TASK" && roleType !== "DVT_TASK" && roleType !== "GROUP_CMO_TASK" && !isRetailHOCMORole && roleType !== "REF_CMO_TASK" && roleType !== 'PIVV_TASK' && roleType !== "GROUP_VENDOR_CMO_TASK" && roleType !== "MAS_TASK" ? [
             {
                 label: "Previous Policies",
                 path: safeApplicationNumber ? getPreviousPoliciesPath(safeBusinessType, safeApplicationNumber) : "",
@@ -391,7 +394,7 @@ const QuickLinks = ({
                 ),
             },
         ] : []),
-        ...(roleType !== "GROUP_CMO_TASK" && roleType !== "CMO_TASK" && roleType !== "REF_CMO_TASK" && roleType !== 'PIVV_TASK' && roleType !== "GROUP_VENDOR_CMO_TASK" && roleType !== "MAS_TASK"? [
+        ...(roleType !== "GROUP_CMO_TASK" && !isRetailHOCMORole && roleType !== "REF_CMO_TASK" && roleType !== 'PIVV_TASK' && roleType !== "GROUP_VENDOR_CMO_TASK" && roleType !== "MAS_TASK"? [
             {
                 label: "Open Tasks",
                 path: safeApplicationNumber ? getOpenTasksPath(safeBusinessType, safeApplicationNumber) : "",
@@ -401,7 +404,7 @@ const QuickLinks = ({
                 ),
             },
         ] : []),
-        ...(roleType !== 'DVT_FORMAL_TASK' && roleType !== 'DVT_TASK'  &&roleType !== 'CVT_TASK' && roleType !== "GROUP_CMO_TASK" && roleType !== "CMO_TASK" && roleType !== "REF_CMO_TASK" && roleType !== 'PIVV_TASK' && roleType !== "GROUP_VENDOR_CMO_TASK" && roleType !== "MAS_TASK" ? [
+        ...(roleType !== 'DVT_FORMAL_TASK' && roleType !== 'DVT_TASK'  &&roleType !== 'CVT_TASK' && roleType !== "GROUP_CMO_TASK" && !isRetailHOCMORole && roleType !== "REF_CMO_TASK" && roleType !== 'PIVV_TASK' && roleType !== "GROUP_VENDOR_CMO_TASK" && roleType !== "MAS_TASK" ? [
             {
                 label: "Risk Details",
                 path: safeApplicationNumber ? getRiskDetailsPath(safeBusinessType, safeApplicationNumber) : "",
@@ -411,7 +414,7 @@ const QuickLinks = ({
                 ),
             },
         ] : []),
-        ...( roleType !== "GROUP_CMO_TASK" && roleType !== "CMO_TASK" && roleType !== "REF_CMO_TASK" && roleType !== 'PIVV_TASK' && roleType !== "GROUP_VENDOR_CMO_TASK" ? [
+        ...( roleType !== "GROUP_CMO_TASK" && !isRetailHOCMORole && roleType !== "REF_CMO_TASK" && roleType !== 'PIVV_TASK' && roleType !== "GROUP_VENDOR_CMO_TASK" ? [
 
             {
                 label: "Audit Trail",
@@ -431,7 +434,7 @@ const QuickLinks = ({
         ...(roleType == 'CPT_DATA_ENTRY_NMR_TASK' || roleType == 'GUW_FORMAL_TASK' ? [
             { label: "View Financial", path: safeApplicationNumber ? getFinancialPath(safeBusinessType, safeApplicationNumber) : "" },
         ] : []),
-        ...(hideSearchApplication && roleType !== "GROUP_REF_CMO_TASK" && roleType !== "CMO_TASK" && roleType !== "REF_CMO_TASK"
+        ...(hideSearchApplication && roleType !== "GROUP_REF_CMO_TASK" && !isRetailHOCMORole && roleType !== "REF_CMO_TASK"
             ? [
                 {
                     label: "Search Application",
