@@ -54,6 +54,7 @@ const UPPERCASE_LABEL_PARTS =
     "ECG",
     "GOPS",
     "GUW",
+    "HO",
     "HOD",
     "IT",
     "MMT",

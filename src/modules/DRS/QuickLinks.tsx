@@ -14,7 +14,7 @@ import {
     getSearchApplicationPath,
     normalizeBusinessType,
 } from "../../routes/routes";
-import { isRetailHOCMOTask } from "./drsRoleRouting";
+import { isRetailCMORole } from "./drsRoleRouting";
 import { useAppContext } from "../../hooks/useAppContext";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { completeTaskThunk } from "../../store/thunks/completeTaskThunk";
@@ -298,7 +298,7 @@ const QuickLinks = ({
         localStorage.getItem("roleType") ??
         "";
     // Treat the inbox HO_CMO_TASK alias exactly like the existing CMO_TASK UI.
-    const isRetailHOCMORole = isRetailHOCMOTask(roleType);
+    const isRetailHOCMORole = isRetailCMORole(roleType);
     const referToItDecisionCode = getMiscCode(
         getMiscMasters(masterData).find(
             (master) => getMiscType(master) === "REF_IT",
@@ -352,7 +352,76 @@ const QuickLinks = ({
 
     const profileName = roleType === "GROUP_CUW_CLAIM_AUDIT_TASK" || roleType === "GROUP_CUW_TASK" || roleType === "GROUP_HOD_TASK" || roleType === "GROUP_SR_UW_TASK" || roleType === "FORMAL_HOD_TASK" || roleType === "FORMAL_SR_UW_TASK" || roleType === "FORMAL_CUW_CLAIM_AUDIT_TASK" ? "Member Profile" : "Applicant Profile"
 
-    const quickLinks: QuickLinkItem[] = [
+    const normalizedRoleType = roleType.trim().toUpperCase();
+    const hasMedicalCmoQuickLinks = [
+        "CMO_TASK",
+        "HO_CMO_TASK",
+        "REF_CMO_TASK",
+        "VENDOR_CMO_TASK",
+    ].includes(normalizedRoleType);
+
+    // These four retail CMO roles use the same complete Quick Links menu.
+    const medicalCmoQuickLinks: QuickLinkItem[] = [
+        {
+            label: "Applicant Profile",
+            path: "",
+            onClick: () => setOpenSummaryDialog(true),
+        },
+        {
+            label: "Proposal Form & Documents",
+            path: proposerFormLink,
+            unavailableMessage: !proposerFormLink
+                ? "There is no document link found."
+                : undefined,
+        },
+        {
+            label: "Previous Policies",
+            path: safeApplicationNumber
+                ? getPreviousPoliciesPath(safeBusinessType, safeApplicationNumber)
+                : "",
+            unavailableMessage: getEmptyArrayMessage(
+                drsQuickLinks?.previousPolicies,
+                "There are no previous policies found.",
+            ),
+        },
+        {
+            label: "Open Tasks",
+            path: safeApplicationNumber
+                ? getOpenTasksPath(safeBusinessType, safeApplicationNumber)
+                : "",
+            unavailableMessage: getEmptyArrayMessage(
+                drsQuickLinks?.openOtherTasks,
+                "There are no open tasks found.",
+            ),
+        },
+        {
+            label: "Risk Details",
+            path: safeApplicationNumber
+                ? getRiskDetailsPath(safeBusinessType, safeApplicationNumber)
+                : "",
+            unavailableMessage: getEmptyArrayMessage(
+                drsQuickLinks?.riskDetails,
+                "There are no risk details found.",
+            ),
+        },
+        {
+            label: "Audit Trail",
+            path: safeApplicationNumber
+                ? getAuditTrailPath(safeBusinessType, safeApplicationNumber)
+                : "",
+            unavailableMessage: getEmptyArrayMessage(
+                drsQuickLinks?.auditTrail,
+                "There is no audit trail found.",
+            ),
+        },
+        {
+            label: "Raise Grievance",
+            path: "",
+            onClick: () => setOpenRaiseGrievanceDialog(true),
+        },
+    ];
+
+    const defaultQuickLinks: QuickLinkItem[] = [
          ...(roleType !== 'CVT_TASK' && roleType !== 'DVT_TASK' && roleType !== 'DVT_FORMAL_TASK' ? [
         {
             label: profileName ,
@@ -451,6 +520,10 @@ const QuickLinks = ({
             },
         ] : []),
     ];
+
+    const quickLinks = hasMedicalCmoQuickLinks
+        ? medicalCmoQuickLinks
+        : defaultQuickLinks;
 
     const toggleQuickLinks = useCallback(() => {
         setIsOpen((prev) => !prev);

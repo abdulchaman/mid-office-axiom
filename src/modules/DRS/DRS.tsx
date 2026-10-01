@@ -850,6 +850,7 @@ import RaiseGrievance from "./RaiseGrievance";
 import VendorCMOApplicationSummary from "./VendorCMOApplicationSummary";
 import RefCMOApplicationSummary from "./RefCMOApplicationSummary";
 import HOCMOApplicationSummary from "./HOCMOApplicationSummary";
+import CMOApplicationSummary from "./CMOApplicationSummary";
 import PIVVDrs from "./PIVVDrs";
 import ClaimAudit from "./ClaimAudit";
 import SrUWDrs from "./SrUWDrs";
@@ -871,7 +872,7 @@ import GroupFormalGuwDrs from "./Group/Formal/GroupFormalGuwDrs";
 import GroupFormalSrUwDrs from "./Group/Formal/GroupFormalSrUwDrs";
 import GroupFormalHoD from "./Group/Formal/GroupFormalHoD";
 import GroupFormalClaimAuditTask from "./Group/Formal/GroupFormalClaimAuditTask";
-import { isRetailHOCMOTask } from "./drsRoleRouting";
+import { getRetailCMOSummaryScreen } from "./drsRoleRouting";
 
 
 interface ApplicationRow {
@@ -1137,6 +1138,9 @@ const DRS = () => {
     application?.roleType?.trim() ||
     selectedCaseContext.roleType?.trim() ||
     storedRoleType;
+
+  // Keep CMO_TASK and HO_CMO_TASK on their respective summary screens.
+  const retailCMOSummaryScreen = getRetailCMOSummaryScreen(roleType);
 
   const layout = mapper[roleType as keyof typeof mapper];
 
@@ -1761,8 +1765,24 @@ const DRS = () => {
               />
             ) :
 
-              isRetailHOCMOTask(roleType) ? (
+              retailCMOSummaryScreen === "ho-cmo" ? (
                 <HOCMOApplicationSummary
+                  stickyTop={0}
+                  onBackToInbox={() => navigate(getInboxPath())}
+                  requirementManagement={
+                    RequirementManagementPanel ? (
+                      <RequirementManagementPanel embedded />
+                    ) : null
+                  }
+                  decisionHistory={
+                    DecisionHistoryPanel ? (
+                      <DecisionHistoryPanel embedded />
+                    ) : null
+                  }
+                />
+              ) :
+              retailCMOSummaryScreen === "cmo" ? (
+                <CMOApplicationSummary
                   stickyTop={0}
                   onBackToInbox={() => navigate(getInboxPath())}
                   requirementManagement={

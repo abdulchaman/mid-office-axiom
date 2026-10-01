@@ -43,6 +43,12 @@ interface HOCMOApplicationSummaryProps {
   requirementManagement?: ReactNode;
   decisionHistory?: ReactNode;
   stickyTop?: number | string;
+  /** Internal screen variant controls; defaults preserve the HO CMO screen. */
+  showClaimAudit?: boolean;
+  medicalDecisionTitle?: string;
+  cmoDecisionFieldsRequired?: boolean;
+  showSpecialMedicalTest?: boolean;
+  reorderDecisionColumns?: boolean;
 }
 
 type QuickLinkPanel =
@@ -1323,6 +1329,11 @@ const HOCMOApplicationSummary = ({
   requirementManagement,
   decisionHistory,
   stickyTop = 72,
+  showClaimAudit = true,
+  medicalDecisionTitle = "HO CMO Medical Decision",
+  cmoDecisionFieldsRequired = false,
+  showSpecialMedicalTest = true,
+  reorderDecisionColumns = true,
 }: HOCMOApplicationSummaryProps) => {
   const drsData = useAppSelector(
     (state: RootState) => state.drs.data,
@@ -2405,6 +2416,32 @@ const HOCMOApplicationSummary = ({
         </Box>
       </Box>
 
+      {/* HO_CMO_TASK uses the same Medical and Risk Parameters cards as REF_CMO_TASK. */}
+      {showRiskAnalytics && (
+        <Box sx={{ width: "100%", minWidth: 0, px: 0.5, pb: 1 }}>
+          <DashboardCard eyebrow="" title="">
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(2, minmax(0, 1fr))",
+                },
+                gap: 0.75,
+              }}
+            >
+              {riskCards.map((card) => (
+                <RiskAnalyticsCard
+                  key={card.id}
+                  card={card}
+                  onClick={() => setSelectedRiskCard(card)}
+                />
+              ))}
+            </Box>
+          </DashboardCard>
+        </Box>
+      )}
+
       {/* BRE, risk analytics and the remaining case snapshot scroll normally. */}
       <Box
         sx={{
@@ -2421,10 +2458,14 @@ const HOCMOApplicationSummary = ({
           </Box>
         ) : (
           <Box sx={{ mb: 1 }}>
-            {/* Claim Audit must remain immediately before the HO CMO decision table. */}
-            <ClaimAuditTable />
+            {/* Claim Audit belongs only to the HO_CMO_TASK screen variant. */}
+            {showClaimAudit && <ClaimAuditTable />}
 
             <HOCMOMedicalDecisionTable
+              title={medicalDecisionTitle}
+              cmoFieldsRequired={cmoDecisionFieldsRequired}
+              showSpecialMedicalTest={showSpecialMedicalTest}
+              remarksBeforeDecision={reorderDecisionColumns}
               rows={hoCmoDecisionRows}
               onRowsChange={setHOCMODecisionRows}
               readOnly={readOnly}

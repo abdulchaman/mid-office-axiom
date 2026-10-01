@@ -41,6 +41,7 @@ import BreDecision from "./DRS_Accordions/BreDecision";
 import MemberSelection from "./MemberSeclection";
 import ViewMedical from "./Medical Final/ViewMedical";
 import ViewFinancial from "./Financial/ViewFinancial";
+import UWGuidelines from "./UWGuidelines";
 
 /* -------------------------------------------------------------------------- */
 /* TYPES                                                                      */
@@ -92,6 +93,8 @@ interface UwDecisionHistoryRow {
     financialDecision: string;
     medicalDecision: string;
     smokerStatus: string;
+    referralReason: string;
+    referralRemarks: string;
 }
 
 type UnknownRecord = Record<string, unknown>;
@@ -107,6 +110,8 @@ const UW_DECISION_HISTORY_COLUMNS: Column<UwDecisionHistoryRow>[] = [
     { key: "financialDecision", header: "Financial Decision", width: "12%" },
     { key: "medicalDecision", header: "Medical Decision", width: "12%" },
     { key: "smokerStatus", header: "Smoker Status", width: "12%" },
+    { key: "referralReason", header: "Referral Reason", width: "14%" },
+    { key: "referralRemarks", header: "Referral Remarks", width: "18%" },
 ];
 
 const STATIC_UW_DECISION_HISTORY: UwDecisionHistoryRow[] = [
@@ -119,6 +124,8 @@ const STATIC_UW_DECISION_HISTORY: UwDecisionHistoryRow[] = [
         financialDecision: "Standard",
         medicalDecision: "Standard",
         smokerStatus: "Non-Smoker",
+        referralReason: "Overall risk assessment",
+        referralRemarks: "Referred for HOD review.",
     }
 ];
 
@@ -853,6 +860,7 @@ const SdtReadonlyRow = ({ decision, remarks }: SdtReadonlyRowProps) => (
                 </Typography>
             </Box>
         ))}
+        <UWGuidelines />
     </Box>
 );
 

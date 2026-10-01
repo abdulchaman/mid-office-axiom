@@ -1,6 +1,16 @@
-// The inbox uses HO_CMO_TASK while older DRS flows use CMO_TASK; both identify
-// the same retail HO CMO screen and must remain routing aliases.
-export const isRetailHOCMOTask = (roleType: unknown): boolean =>
-  ["CMO_TASK", "HO_CMO_TASK"].includes(
-    String(roleType ?? "").trim().toUpperCase(),
-  );
+export type RetailCMOSummaryScreen = "cmo" | "ho-cmo" | null;
+
+// CMO_TASK and HO_CMO_TASK share supporting UI rules but use separate screens.
+export const getRetailCMOSummaryScreen = (
+  roleType: unknown,
+): RetailCMOSummaryScreen => {
+  const normalizedRole = String(roleType ?? "").trim().toUpperCase();
+
+  if (normalizedRole === "HO_CMO_TASK") return "ho-cmo";
+  if (normalizedRole === "CMO_TASK") return "cmo";
+
+  return null;
+};
+
+export const isRetailCMORole = (roleType: unknown): boolean =>
+  getRetailCMOSummaryScreen(roleType) !== null;

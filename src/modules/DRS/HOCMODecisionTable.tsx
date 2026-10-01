@@ -352,10 +352,19 @@ import {
   Typography,
   type SelectChangeEvent,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import CustomDialog from "../../components/ui/Dialog/Dialog";
+import CustomButton from "../../components/ui/Button/Button";
+import CustomSelect from "../../components/ui/Select/Select";
 import { EyeIcon, UserProfileIcon } from "../../icons/Icons";
+import SpecialMedicalForm, {
+  type SpecialMedicalFormHandle,
+} from "./Medical Final/Special Medical/SpecialMedicalForm";
+import {
+  getSpecialMedicalConfig,
+  getSpecialMedicalSubSectionFormFields,
+} from "./Medical Final/Special Medical/specialMedicalConfig";
 
 export const HO_CMO_DECISION_OPTIONS = [
   "STD",
@@ -442,7 +451,58 @@ interface HOCMOMedicalDecisionTableProps {
   rows?: HOCMOMedicalDecisionRow[];
   readOnly?: boolean;
   onRowsChange?: (rows: HOCMOMedicalDecisionRow[]) => void;
+  cmoFieldsRequired?: boolean;
+  showSpecialMedicalTest?: boolean;
+  remarksBeforeDecision?: boolean;
 }
+
+export const SPECIAL_MEDICAL_SECTIONS = Array.from(
+  new Set(getSpecialMedicalConfig().map((field) => field.section)),
+);
+
+export const getSpecialMedicalDemoValues = (
+  section: string,
+): Record<string, string> => {
+  const sectionIndex = SPECIAL_MEDICAL_SECTIONS.indexOf(section);
+
+  return Object.fromEntries(
+    getSpecialMedicalSubSectionFormFields(section).map((field) => {
+      const valueByField: Record<string, string> = {
+        medicalType: section,
+        testDate: "2026-09-18",
+        date: "2026-09-18",
+        findings: field.masterKey === "FINDINGS_RESULT" ? "NEGATIVE" : "NORMAL",
+        ejectionFraction: "62",
+        ejectionResult: "Normal",
+        rejectionAbnormality: "NORMAL",
+        bloodUrea: "26",
+        bun: "12",
+        result: "Normal",
+        axis: "NORMAL",
+        heartRate: "72",
+        heartRateFinding: field.editable ? "145" : "Normal sinus rate",
+        heartRateResult: "Normal",
+        examineeName: "Rudra Prakash Sangha",
+        examineeAge: "38",
+        diagnosticCentreName: "Wellness Diagnostics",
+        doctorName: "Ananya Mehta",
+        doctorRegistrationNo: "MH-201845",
+        inspiration: "2",
+        expiration: "4",
+        fev1: "3",
+        fvc: "4",
+        fev1Fvc: "81",
+        rv: "1",
+        vc: "4",
+        mets: "GOOD",
+        remark: "No adverse findings",
+        remarks: "No adverse findings",
+      };
+
+      return [field.id, valueByField[field.id] ?? String(10 + sectionIndex)];
+    }),
+  );
+};
 
 const headerCellSx = {
   backgroundColor: "#FFEAD7",
@@ -502,12 +562,29 @@ export default function HOCMODecisionTable({
   rows: controlledRows,
   readOnly = false,
   onRowsChange,
+  cmoFieldsRequired = false,
+  showSpecialMedicalTest = true,
+  remarksBeforeDecision = true,
 }: HOCMOMedicalDecisionTableProps) {
   const [internalRows, setInternalRows] = useState<HOCMOMedicalDecisionRow[]>(
     () => HO_CMO_HARDCODED_ROWS.map((row) => ({ ...row })),
   );
   const [selectedHistoryRow, setSelectedHistoryRow] =
     useState<HOCMOMedicalDecisionRow | null>(null);
+  const [testSelectorOpen, setTestSelectorOpen] = useState(false);
+  const [selectedSpecialMedical, setSelectedSpecialMedical] = useState("");
+  const specialMedicalFormRef = useRef<SpecialMedicalFormHandle | null>(null);
+  const specialMedicalFields = useMemo(
+    () => getSpecialMedicalConfig().filter((field) => field.section === selectedSpecialMedical),
+    [selectedSpecialMedical],
+  );
+
+  useEffect(() => {
+    if (!selectedSpecialMedical) return;
+    specialMedicalFormRef.current?.setFormValues(
+      getSpecialMedicalDemoValues(selectedSpecialMedical),
+    );
+  }, [selectedSpecialMedical]);
 
   const shouldUseHardcodedRows =
     controlledRows === undefined || controlledRows.length === 0;
@@ -536,6 +613,59 @@ export default function HOCMODecisionTable({
     !readOnly &&
     (shouldUseHardcodedRows || Boolean(onRowsChange));
 
+  const renderDecisionCell = (
+    row: HOCMOMedicalDecisionRow,
+    rowIndex: number,
+  ) => (
+    <TableCell sx={bodyCellSx}>
+      <Select<string>
+        fullWidth
+        required={cmoFieldsRequired}
+        error={cmoFieldsRequired && !row.cmoDecision}
+        size="small"
+        displayEmpty
+        value={row.cmoDecision ?? ""}
+        disabled={!isEditable}
+        onChange={(event: SelectChangeEvent) =>
+          updateRow(rowIndex, {
+            cmoDecision: event.target.value as HOCMODecision | "",
+          })
+        }
+        renderValue={(selected) =>
+          selected || (
+            <Typography component="span" sx={{ color: "#8A8A8A", fontSize: "10px" }}>
+              Select decision
+            </Typography>
+          )
+        }
+        sx={{
+          height: 32,
+          width: "100%",
+          minWidth: 0,
+          backgroundColor: "#FFFFFF",
+          fontSize: "10px",
+          "& .MuiSelect-select": {
+            py: 0.6,
+            px: 0.6,
+            pr: "22px !important",
+            minWidth: "0 !important",
+            whiteSpace: "normal",
+            overflowWrap: "anywhere",
+          },
+        }}
+      >
+        <MenuItem value="" disabled>
+          Select decision
+        </MenuItem>
+        {HO_CMO_DECISION_OPTIONS.map((option) => (
+          <MenuItem key={option} value={option} sx={{ fontSize: "11px" }}>
+            {option}
+          </MenuItem>
+        ))}
+      </Select>
+    </TableCell>
+  );
+
   return (
     <>
       <Paper
@@ -555,11 +685,30 @@ export default function HOCMODecisionTable({
             py: 1.2,
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
           <Typography sx={{ fontSize: "12px", fontWeight: 700 }}>
             {title}
           </Typography>
+          {showSpecialMedicalTest && <CustomButton
+            type="button"
+            variant="outlined"
+            onClick={() => setTestSelectorOpen(true)}
+            sx={{
+              minWidth: 72,
+              px: 2,
+              py: 0.35,
+              borderColor: "#FFFFFF",
+              borderRadius: "18px",
+              bgcolor: "#FFFFFF",
+              color: "#A92129",
+              fontSize: "11px",
+              "&:hover": { borderColor: "#FFFFFF", bgcolor: "#FFF4EC" },
+            }}
+          >
+            Add
+          </CustomButton>}
         </Box>
       )}
 
@@ -599,12 +748,25 @@ export default function HOCMODecisionTable({
               <TableCell sx={{ ...headerCellSx, width: "8%" }}>
                 Received Date
               </TableCell>
-              <TableCell sx={{ ...headerCellSx, width: "20%" }}>
-                CMO Decision
-              </TableCell>
-              <TableCell sx={{ ...headerCellSx, width: "25%" }}>
-                CMO Remarks
-              </TableCell>
+              {remarksBeforeDecision ? (
+                <>
+                  <TableCell sx={{ ...headerCellSx, width: "25%" }}>
+                    CMO Remarks{cmoFieldsRequired ? " *" : ""}
+                  </TableCell>
+                  <TableCell sx={{ ...headerCellSx, width: "20%" }}>
+                    CMO Decision{cmoFieldsRequired ? " *" : ""}
+                  </TableCell>
+                </>
+              ) : (
+                <>
+                  <TableCell sx={{ ...headerCellSx, width: "20%" }}>
+                    CMO Decision
+                  </TableCell>
+                  <TableCell sx={{ ...headerCellSx, width: "25%" }}>
+                    CMO Remarks
+                  </TableCell>
+                </>
+              )}
               <TableCell
                 align="center"
                 sx={{ ...headerCellSx, width: "8%" }}
@@ -638,67 +800,15 @@ export default function HOCMODecisionTable({
                   <TableCell sx={bodyCellSx}>
                     {row.receivedDate || "-"}
                   </TableCell>
-                
 
-                  <TableCell sx={bodyCellSx}>
-                    <Select<string>
-                      fullWidth
-                      size="small"
-                      displayEmpty
-                      value={row.cmoDecision ?? ""}
-                      disabled={!isEditable}
-                      onChange={(event: SelectChangeEvent) =>
-                        updateRow(rowIndex, {
-                          cmoDecision:
-                            event.target.value as HOCMODecision | "",
-                        })
-                      }
-                      renderValue={(selected) =>
-                        selected || (
-                          <Typography
-                            component="span"
-                            sx={{ color: "#8A8A8A", fontSize: "10px" }}
-                          >
-                            Select decision
-                          </Typography>
-                        )
-                      }
-                      sx={{
-                        height: 32,
-                        width: "100%",
-                        minWidth: 0,
-                        backgroundColor: "#FFFFFF",
-                        fontSize: "10px",
-                        "& .MuiSelect-select": {
-                          py: 0.6,
-                          px: 0.6,
-                          pr: "22px !important",
-                          minWidth: "0 !important",
-                          whiteSpace: "normal",
-                          overflowWrap: "anywhere",
-                        },
-                      }}
-                    >
-                      <MenuItem value="" disabled>
-                        Select decision
-                      </MenuItem>
-
-                      {HO_CMO_DECISION_OPTIONS.map((option) => (
-                        <MenuItem
-                          key={option}
-                          value={option}
-                          sx={{ fontSize: "11px" }}
-                        >
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </TableCell>
+                  {!remarksBeforeDecision && renderDecisionCell(row, rowIndex)}
 
                   <TableCell sx={bodyCellSx}>
                     <TextField
                       fullWidth
                       size="small"
+                      required={cmoFieldsRequired}
+                      error={cmoFieldsRequired && !(row.cmoRemarks ?? "").trim()}
                       value={row.cmoRemarks ?? ""}
                       disabled={!isEditable}
                       placeholder="Enter remarks"
@@ -724,6 +834,8 @@ export default function HOCMODecisionTable({
                       }}
                     />
                   </TableCell>
+
+                  {remarksBeforeDecision && renderDecisionCell(row, rowIndex)}
 
                     <TableCell align="center" sx={bodyCellSx}>
                     <Tooltip title="View remarks history" arrow>
@@ -759,6 +871,67 @@ export default function HOCMODecisionTable({
         </Table>
         </TableContainer>
       </Paper>
+
+      {showSpecialMedicalTest && <CustomDialog
+        open={testSelectorOpen}
+        onClose={() => setTestSelectorOpen(false)}
+        title="Add Special Medical Test"
+        maxWidth="sm"
+        fullWidth
+      >
+        <Box sx={{ px: 0.5, pb: 1 }}>
+          <Typography sx={{ mb: 0.75, color: "#444444", fontSize: 12 }}>
+            Special Medical Test
+          </Typography>
+          <CustomSelect
+            value=""
+            placeholder="Select Special Medical Test"
+            options={SPECIAL_MEDICAL_SECTIONS.map((section) => ({
+              label: section,
+              value: section,
+            }))}
+            onChange={(section) => {
+              setTestSelectorOpen(false);
+              setSelectedSpecialMedical(section);
+            }}
+          />
+        </Box>
+      </CustomDialog>}
+
+      {showSpecialMedicalTest && <CustomDialog
+        open={Boolean(selectedSpecialMedical)}
+        onClose={() => setSelectedSpecialMedical("")}
+        title={selectedSpecialMedical || "Special Medical Test"}
+        maxWidth="lg"
+        fullWidth
+        contentSx={{ p: { xs: 1.5, sm: 2 } }}
+        actions={
+          <CustomButton
+            type="button"
+            variant="contained"
+            onClick={() => {
+              // Keep the modal open when required medical fields are incomplete.
+              if (!specialMedicalFormRef.current?.validateForm()) return;
+
+              specialMedicalFormRef.current.commitEdit();
+              setSelectedSpecialMedical("");
+            }}
+            sx={{ minWidth: 82, borderRadius: "18px" }}
+          >
+            Save
+          </CustomButton>
+        }
+        actionsSx={{ px: { xs: 1.5, sm: 2 }, pb: 2 }}
+      >
+        {selectedSpecialMedical && (
+          <SpecialMedicalForm
+            ref={specialMedicalFormRef}
+            selectedSubSection={selectedSpecialMedical}
+            fields={specialMedicalFields}
+            isEditing
+          />
+        )}
+      </CustomDialog>}
 
       <CustomDialog
         open={Boolean(selectedHistoryRow)}

@@ -650,6 +650,7 @@ import {
 import { useState } from "react";
 import CustomDialog from "../../components/ui/Dialog/Dialog";
 import SpecialMedicalForm from "./Medical Final/Special Medical/SpecialMedicalForm";
+import { getSpecialMedicalConfig } from "./Medical Final/Special Medical/specialMedicalConfig";
 import CustomButton from "../../components/ui/Button/Button";
 
 export const CMO_DECISION_OPTIONS = [
@@ -657,6 +658,7 @@ export const CMO_DECISION_OPTIONS = [
   "Sub STD",
   "Cannot Opine",
   "Refer to 2nd Opinion",
+  "DC Error",
 ] as const;
 
 export type CMODecision = (typeof CMO_DECISION_OPTIONS)[number];
@@ -849,11 +851,11 @@ export default function CMOMedicalDecisionTable({
               <TableCell sx={{ ...headerCellSx, width: "12%" }}>
                 Received Date
               </TableCell>
-              <TableCell sx={{ ...headerCellSx, width: "20%" }}>
-                Decision
-              </TableCell>
               <TableCell sx={{ ...headerCellSx, width: "25%" }}>
                 Remarks
+              </TableCell>
+              <TableCell sx={{ ...headerCellSx, width: "20%" }}>
+                Decision
               </TableCell>
              
             </TableRow>
@@ -904,6 +906,36 @@ export default function CMOMedicalDecisionTable({
                   <TableCell sx={bodyCellSx}>{row.receivedDate || "-"}</TableCell>
 
                   <TableCell sx={bodyCellSx}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      value={row.remarks ?? ""}
+                      disabled={!isEditable}
+                      placeholder="Enter remarks"
+                      multiline
+                      minRows={1}
+                      maxRows={3}
+                      onChange={(event) =>
+                        updateRow(rowIndex, {
+                          remarks: event.target.value,
+                        })
+                      }
+                      sx={{
+                        minWidth: 0,
+                        "& .MuiInputBase-root": {
+                          minWidth: 0,
+                          minHeight: 32,
+                          backgroundColor: "#FFFFFF",
+                          fontSize: "10px",
+                        },
+                        "& .MuiInputBase-input": {
+                          py: 0.6,
+                        },
+                      }}
+                    />
+                  </TableCell>
+
+                  <TableCell sx={bodyCellSx}>
                     <Select<string>
                       fullWidth
                       size="small"
@@ -944,43 +976,12 @@ export default function CMOMedicalDecisionTable({
                       <MenuItem value="" disabled>
                         Select decision
                       </MenuItem>
-
                       {CMO_DECISION_OPTIONS.map((option) => (
                         <MenuItem key={option} value={option} sx={{ fontSize: "11px" }}>
                           {option}
                         </MenuItem>
                       ))}
                     </Select>
-                  </TableCell>
-
-                  <TableCell sx={bodyCellSx}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={row.remarks ?? ""}
-                      disabled={!isEditable}
-                      placeholder="Enter remarks"
-                      multiline
-                      minRows={1}
-                      maxRows={3}
-                      onChange={(event) =>
-                        updateRow(rowIndex, {
-                          remarks: event.target.value,
-                        })
-                      }
-                      sx={{
-                        minWidth: 0,
-                        "& .MuiInputBase-root": {
-                          minWidth: 0,
-                          minHeight: 32,
-                          backgroundColor: "#FFFFFF",
-                          fontSize: "10px",
-                        },
-                        "& .MuiInputBase-input": {
-                          py: 0.6,
-                        },
-                      }}
-                    />
                   </TableCell>
 
                
@@ -1034,6 +1035,10 @@ export default function CMOMedicalDecisionTable({
             selectedSubSection={
               selectedRow.medicalType || selectedRow.fupCode
             }
+            fields={getSpecialMedicalConfig().filter(
+              (field) =>
+                field.section === (selectedRow.medicalType || selectedRow.fupCode),
+            )}
             isEditing
           />
         )}
