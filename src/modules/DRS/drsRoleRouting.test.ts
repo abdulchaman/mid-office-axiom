@@ -1,17 +1,26 @@
-import { isRetailHOCMOTask } from "./drsRoleRouting";
+import {
+  getRetailCMOSummaryScreen,
+  isRetailCMORole,
+} from "./drsRoleRouting";
 
 describe("DRS role routing", () => {
+  it("routes the two CMO roles to different summary screens", () => {
+    expect(getRetailCMOSummaryScreen("HO_CMO_TASK")).toBe("ho-cmo");
+    expect(getRetailCMOSummaryScreen("CMO_TASK")).toBe("cmo");
+  });
+
   it.each(["CMO_TASK", "HO_CMO_TASK", " ho_cmo_task "])(
-    "routes %s to the retail HO CMO screen",
+    "recognizes %s as a retail CMO-family role",
     (roleType) => {
-      expect(isRetailHOCMOTask(roleType)).toBe(true);
+      expect(isRetailCMORole(roleType)).toBe(true);
     },
   );
 
   it.each(["CVT_TASK", "DVT_TASK", "MAS_TASK", "CUW_TASK", undefined])(
-    "does not route %s to the HO CMO screen",
+    "does not classify %s as a retail CMO-family role",
     (roleType) => {
-      expect(isRetailHOCMOTask(roleType)).toBe(false);
+      expect(isRetailCMORole(roleType)).toBe(false);
+      expect(getRetailCMOSummaryScreen(roleType)).toBeNull();
     },
   );
 });

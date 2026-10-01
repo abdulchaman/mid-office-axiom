@@ -735,10 +735,20 @@ import {
   Typography,
   type SelectChangeEvent,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import CustomDialog from "../../components/ui/Dialog/Dialog";
+import CustomButton from "../../components/ui/Button/Button";
+import CustomSelect from "../../components/ui/Select/Select";
 import { EyeIcon, UserProfileIcon } from "../../icons/Icons";
+import SpecialMedicalForm, {
+  type SpecialMedicalFormHandle,
+} from "./Medical Final/Special Medical/SpecialMedicalForm";
+import { getSpecialMedicalConfig } from "./Medical Final/Special Medical/specialMedicalConfig";
+import {
+  getSpecialMedicalDemoValues,
+  SPECIAL_MEDICAL_SECTIONS,
+} from "./HOCMODecisionTable";
 
 export const REF_CMO_DECISION_OPTIONS = [
   "STD",
@@ -975,6 +985,20 @@ export default function RefCMODecisionTable({
   );
   const [selectedHistoryRow, setSelectedHistoryRow] =
     useState<RefCMODecisionRow | null>(null);
+  const [testSelectorOpen, setTestSelectorOpen] = useState(false);
+  const [selectedSpecialMedical, setSelectedSpecialMedical] = useState("");
+  const specialMedicalFormRef = useRef<SpecialMedicalFormHandle | null>(null);
+  const specialMedicalFields = useMemo(
+    () => getSpecialMedicalConfig().filter((field) => field.section === selectedSpecialMedical),
+    [selectedSpecialMedical],
+  );
+
+  useEffect(() => {
+    if (!selectedSpecialMedical) return;
+    specialMedicalFormRef.current?.setFormValues(
+      getSpecialMedicalDemoValues(selectedSpecialMedical),
+    );
+  }, [selectedSpecialMedical]);
   const rows = controlledRows ?? internalRows;
   const selectedRemarksHistory = selectedHistoryRow
     ? getRemarksHistory(selectedHistoryRow)
@@ -1016,11 +1040,30 @@ export default function RefCMODecisionTable({
               py: 1.2,
               display: "flex",
               alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
             <Typography sx={{ fontSize: "12px", fontWeight: 700 }}>
               {title}
             </Typography>
+            <CustomButton
+              type="button"
+              variant="outlined"
+              onClick={() => setTestSelectorOpen(true)}
+              sx={{
+                minWidth: 72,
+                px: 2,
+                py: 0.35,
+                borderColor: "#FFFFFF",
+                borderRadius: "18px",
+                bgcolor: "#FFFFFF",
+                color: "#A92129",
+                fontSize: "11px",
+                "&:hover": { borderColor: "#FFFFFF", bgcolor: "#FFF4EC" },
+              }}
+            >
+              Add
+            </CustomButton>
           </Box>
         )}
 
@@ -1053,11 +1096,11 @@ export default function RefCMODecisionTable({
                 <TableCell sx={{ ...headerCellSx, width: "8%" }}>
                   Received Date
                 </TableCell>
-                <TableCell sx={{ ...headerCellSx, width: "20%" }}>
-                  CMO Decision
-                </TableCell>
                 <TableCell sx={{ ...headerCellSx, width: "25%" }}>
                   CMO Remarks
+                </TableCell>
+                <TableCell sx={{ ...headerCellSx, width: "20%" }}>
+                  CMO Decision
                 </TableCell>
                 <TableCell
                   align="center"
@@ -1096,6 +1139,37 @@ export default function RefCMODecisionTable({
                         {displayValue(row.receivedDate)}
                       </TableCell>
                     
+
+                      <TableCell sx={bodyCellSx}>
+                        <TextField
+                          fullWidth
+                          required
+                          size="small"
+                          multiline
+                          minRows={1}
+                          maxRows={3}
+                          value={row.cmoRemarks ?? ""}
+                          disabled={readOnly}
+                          placeholder="Enter CMO remarks"
+                          onChange={(event) =>
+                            updateRow(rowIndex, {
+                              cmoRemarks: event.target.value,
+                            })
+                          }
+                          sx={{
+                            minWidth: 0,
+                            "& .MuiInputBase-root": {
+                              minWidth: 0,
+                              minHeight: 32,
+                              bgcolor: "#FFFFFF",
+                              fontSize: "10px",
+                            },
+                            "& .MuiInputBase-input": {
+                              py: 0.6,
+                            },
+                          }}
+                        />
+                      </TableCell>
 
                       <TableCell sx={bodyCellSx}>
                         <Select<string>
@@ -1139,7 +1213,6 @@ export default function RefCMODecisionTable({
                           <MenuItem value="" disabled>
                             Select decision
                           </MenuItem>
-
                           {REF_CMO_DECISION_OPTIONS.map((option) => (
                             <MenuItem
                               key={option}
@@ -1150,37 +1223,6 @@ export default function RefCMODecisionTable({
                             </MenuItem>
                           ))}
                         </Select>
-                      </TableCell>
-
-                      <TableCell sx={bodyCellSx}>
-                        <TextField
-                          fullWidth
-                          required
-                          size="small"
-                          multiline
-                          minRows={1}
-                          maxRows={3}
-                          value={row.cmoRemarks ?? ""}
-                          disabled={readOnly}
-                          placeholder="Enter CMO remarks"
-                          onChange={(event) =>
-                            updateRow(rowIndex, {
-                              cmoRemarks: event.target.value,
-                            })
-                          }
-                          sx={{
-                            minWidth: 0,
-                            "& .MuiInputBase-root": {
-                              minWidth: 0,
-                              minHeight: 32,
-                              bgcolor: "#FFFFFF",
-                              fontSize: "10px",
-                            },
-                            "& .MuiInputBase-input": {
-                              py: 0.6,
-                            },
-                          }}
-                        />
                       </TableCell>
 
                         <TableCell align="center" sx={bodyCellSx}>
@@ -1213,6 +1255,66 @@ export default function RefCMODecisionTable({
           </Table>
         </TableContainer>
       </Paper>
+
+      <CustomDialog
+        open={testSelectorOpen}
+        onClose={() => setTestSelectorOpen(false)}
+        title="Add Special Medical Test"
+        maxWidth="sm"
+        fullWidth
+      >
+        <Box sx={{ px: 0.5, pb: 1 }}>
+          <Typography sx={{ mb: 0.75, color: "#444444", fontSize: 12 }}>
+            Special Medical Test
+          </Typography>
+          <CustomSelect
+            value=""
+            placeholder="Select Special Medical Test"
+            options={SPECIAL_MEDICAL_SECTIONS.map((section) => ({
+              label: section,
+              value: section,
+            }))}
+            onChange={(section) => {
+              setTestSelectorOpen(false);
+              setSelectedSpecialMedical(section);
+            }}
+          />
+        </Box>
+      </CustomDialog>
+
+      <CustomDialog
+        open={Boolean(selectedSpecialMedical)}
+        onClose={() => setSelectedSpecialMedical("")}
+        title={selectedSpecialMedical || "Special Medical Test"}
+        maxWidth="lg"
+        fullWidth
+        contentSx={{ p: { xs: 1.5, sm: 2 } }}
+        actions={
+          <CustomButton
+            type="button"
+            variant="contained"
+            onClick={() => {
+              // Keep the modal open until all required medical fields are valid.
+              if (!specialMedicalFormRef.current?.validateForm()) return;
+              specialMedicalFormRef.current.commitEdit();
+              setSelectedSpecialMedical("");
+            }}
+            sx={{ minWidth: 82, borderRadius: "18px" }}
+          >
+            Save
+          </CustomButton>
+        }
+        actionsSx={{ px: { xs: 1.5, sm: 2 }, pb: 2 }}
+      >
+        {selectedSpecialMedical && (
+          <SpecialMedicalForm
+            ref={specialMedicalFormRef}
+            selectedSubSection={selectedSpecialMedical}
+            fields={specialMedicalFields}
+            isEditing
+          />
+        )}
+      </CustomDialog>
 
       <CustomDialog
         open={Boolean(selectedHistoryRow)}
